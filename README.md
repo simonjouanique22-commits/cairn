@@ -106,6 +106,7 @@ setup.py      vérification et réparation de l’installation
 vscode/       extension VS Code : extension.js, icônes, polices (media/fonts, licences OFL)
 assets/       logo, tampon et visuels du README (screens.js régénère les captures et y embarque les polices)
 check.py      contrôle des hooks sur de faux événements
+.github/      release automatique à chaque tag vX.Y.Z
 ```
 
 </details>
@@ -119,7 +120,7 @@ python3 setup.py           # installation (ne modifie rien sans --fix)
 node assets/screens.js     # captures du README, depuis le vrai rendu
 ```
 
-Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, construire le `.vsix` (`python3 setup.py --fix` le fait), puis `gh release create vX.Y.Z cairn-vX.Y.Z.vsix --notes-file CHANGELOG.md`.
+Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, puis pousser un tag `vX.Y.Z`. GitHub lance les tests, construit le `.vsix` et crée la release (`.github/workflows/release.yml`).
 
 ## Limites connues
 
