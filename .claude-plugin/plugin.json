@@ -1,0 +1,5 @@
+{
+  "name": "claude-roadmap",
+  "version": "0.1.0",
+  "description": "Oblige Claude à découper les grosses demandes en roadmap (liste de tâches) et à la tenir à jour ; affichée par l'extension VS Code du dossier vscode/ et par claude-hud."
+}

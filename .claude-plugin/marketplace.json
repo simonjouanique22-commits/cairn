@@ -1,0 +1,11 @@
+{
+  "name": "claude-roadmap-local",
+  "owner": { "name": "local" },
+  "plugins": [
+    {
+      "name": "claude-roadmap",
+      "source": "./",
+      "description": "Oblige Claude à découper les grosses demandes en roadmap et à la tenir à jour."
+    }
+  ]
+}

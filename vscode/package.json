@@ -1,0 +1,18 @@
+{
+  "name": "claude-roadmap",
+  "displayName": "Roadmap Claude",
+  "description": "Affiche la roadmap (liste de tâches) de Claude Code et son avancement.",
+  "version": "0.2.0",
+  "publisher": "local",
+  "engines": { "vscode": "^1.90.0" },
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [{ "id": "claudeRoadmap", "title": "Roadmap Claude", "icon": "icon.svg" }]
+    },
+    "views": {
+      "claudeRoadmap": [{ "id": "claudeRoadmap.steps", "name": "Étapes", "type": "webview" }]
+    }
+  }
+}
