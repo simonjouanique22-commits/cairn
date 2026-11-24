@@ -1,5 +1,5 @@
 {
   "name": "cairn",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Cairn — le plan de Claude, pierre après pierre : Claude découpe les grosses demandes en roadmap et la tient à jour ; l'extension VS Code du dossier vscode/ l'affiche, avec les fichiers touchés par étape et « Claude t'attend »."
 }

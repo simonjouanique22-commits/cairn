@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 1.1.1
+
+- **Polices de marque embarquées** : Bricolage Grotesque et JetBrains Mono (SIL Open Font License 1.1, jeu latin,
+  108 Ko) dans l'extension — la vue autorise uniquement ces polices locales — et dans tous les visuels du README.
+- La police à chasse fixe ne retombe plus sur la police principale quand celle de l'éditeur est absente.
+- README : crédits et licences des polices, limites mises à jour.
+
 ## 1.1.0
 
 - **Claude t'attend** : quand Claude attend une autorisation ou une réponse, un autocollant clignote dans la roadmap,

@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadRoadmap, loadSessions, filesByStep, readSignal, bar, render, renderApp } = require('./extension.js');
+const { loadRoadmap, loadSessions, filesByStep, readSignal, bar, render, renderApp, shell, polices } = require('./extension.js');
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cairn-'));
 const transcript = (sid) => path.join(home, 'projects', 'p-' + sid, sid + '.jsonl');
@@ -80,6 +80,14 @@ assert(renderApp(r, { lang: 'en' }).includes('IN PROGRESS'));
 // chaque enfant direct d'un conteneur mis à jour par morceaux porte une clé data-k
 for (const m of renderApp(r, { pills: [r, r], journal: [] }).matchAll(/<(main|ol|header|nav|li|div class="(?:card|row|cardtop)")[^>]*>/g)) {
   assert(m[0].includes('data-k='), `clé manquante : ${m[0]}`);
+}
+
+// la vue n'autorise que son script et les polices de l'extension, qui existent bien
+const page = shell('N0NCE', 'https://ext.vscode-resource', polices((f) => `https://ext.vscode-resource/fonts/${f}`));
+assert(page.includes("script-src 'nonce-N0NCE'; font-src https://ext.vscode-resource;") && page.includes("default-src 'none'"));
+assert(page.includes("font-family:'Bricolage Grotesque'") && page.includes('/fonts/JetBrainsMono.woff2'));
+for (const f of ['BricolageGrotesque.woff2', 'JetBrainsMono.woff2']) {
+  assert.strictEqual(fs.readFileSync(path.join(__dirname, 'media', 'fonts', f)).subarray(0, 4).toString(), 'wOF2', f);
 }
 
 fs.rmSync(home, { recursive: true });

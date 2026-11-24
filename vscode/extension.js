@@ -181,7 +181,7 @@ const CSS = `
 :root{--paper:#FFFDF8;--ink:#121212;--text:#121212;--muted:#5E5A52;--soft:#8A857B;--accent:#2B3BFF;--pop:#FF7AD9;
 --sheet-shadow:#121212;--card-shadow:#121212;--box-fg:#FFFDF8;
 --brand:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
---mono:var(--vscode-editor-font-family,'JetBrains Mono',ui-monospace,Menlo,monospace)}
+--mono:'JetBrains Mono',var(--vscode-editor-font-family,ui-monospace),Menlo,monospace}
 body.vscode-dark,body.vscode-high-contrast{--paper:#222226;--ink:#F4F0E8;--text:#F4F0E8;--muted:#C9C4BA;--soft:#85807A;
 --sheet-shadow:var(--pop);--card-shadow:#000;--box-fg:#121212}
 *{box-sizing:border-box}
@@ -398,10 +398,16 @@ addEventListener('click', (e) => {
 });
 vscode.postMessage({ type: 'ready' });`;
 
-function shell(nonce) {
+// Polices de marque embarquées (media/fonts, licence SIL OFL 1.1) ; url(f) donne l'adresse d'un fichier de police.
+const polices = (url) =>
+  `@font-face{font-family:'Bricolage Grotesque';font-weight:400 800;font-display:swap;src:url(${url('BricolageGrotesque.woff2')}) format('woff2')}` +
+  `@font-face{font-family:'JetBrains Mono';font-weight:400 700;font-display:swap;src:url(${url('JetBrainsMono.woff2')}) format('woff2')}`;
+
+// Page de la vue : seuls son script (jeton) et les polices de l'extension (source) sont autorisés.
+function shell(nonce, source = '', fontsCss = '') {
   return `<!doctype html><html><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
-<meta name="viewport" content="width=device-width,initial-scale=1"><style>${CSS}</style></head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';${source ? ` font-src ${source};` : ''}">
+<meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontsCss}${CSS}</style></head>
 <body><div id="app"></div><script nonce="${nonce}">${SCRIPT}</script></body></html>`;
 }
 
@@ -500,8 +506,10 @@ function activate(context) {
         view = v;
         pret = false;
         dernier = undefined;
-        v.webview.options = { enableScripts: true, localResourceRoots: [] };
-        v.webview.html = shell(crypto.randomBytes(16).toString('base64'));
+        const fonts = vscode.Uri.joinPath(context.extensionUri, 'media', 'fonts');
+        v.webview.options = { enableScripts: true, localResourceRoots: [fonts] };
+        const url = (f) => v.webview.asWebviewUri(vscode.Uri.joinPath(fonts, f)).toString();
+        v.webview.html = shell(crypto.randomBytes(16).toString('base64'), v.webview.cspSource, polices(url));
         v.webview.onDidReceiveMessage((m) => {
           if (m?.type === 'ready') { pret = true; dernier = undefined; refresh(); }
           else if (m?.type === 'select' && sessions.some((s) => s.sid === m.sid)) { choisi = m.sid; refresh(); }
@@ -516,4 +524,4 @@ function activate(context) {
   );
 }
 
-module.exports = { activate, deactivate() {}, loadRoadmap, loadSessions, filesByStep, readSignal, bar, render, renderApp, shell };
+module.exports = { activate, deactivate() {}, loadRoadmap, loadSessions, filesByStep, readSignal, bar, render, renderApp, shell, polices };

@@ -93,7 +93,7 @@ Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
 - **Rien ne sort du poste.** Aucun appel réseau, aucune dépendance : Python et Node standard.
 - **Le minimum lu.** Les fichiers de tâches de Claude Code ; dans les transcripts, seulement le dossier de lancement, les changements d’étape et les *chemins* des fichiers écrits — jamais leur contenu, jamais les messages.
 - **Le minimum écrit.** Un petit fichier d’état par session dans `~/.claude/cairn/etat/` (« attend », « a fini »), et un compteur dans le dossier temporaire.
-- **Vue verrouillée.** Un seul script, le sien, autorisé par jeton ; aucune ressource externe ; le texte des tâches est échappé ; seuls les fichiers repérés dans le transcript peuvent être ouverts d’un clic.
+- **Vue verrouillée.** Un seul script, le sien, autorisé par jeton ; aucune ressource externe — les polices de marque sont embarquées dans l’extension ; le texte des tâches est échappé ; seuls les fichiers repérés dans le transcript peuvent être ouverts d’un clic.
 - **Jamais bloquant par erreur.** Si le plugin plante, Claude continue. Dans l’app de bureau Claude, qui a sa propre liste de tâches, il se met en veille.
 
 <details>
@@ -103,8 +103,8 @@ Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
 hooks/        plugin Claude Code : cairn.py, hooks.json
 commands/     /cairn:setup
 setup.py      vérification et réparation de l’installation
-vscode/       extension VS Code : extension.js, icônes
-assets/       logo, tampon et visuels du README (screens.js régénère les captures)
+vscode/       extension VS Code : extension.js, icônes, polices (media/fonts, licences OFL)
+assets/       logo, tampon et visuels du README (screens.js régénère les captures et y embarque les polices)
 check.py      contrôle des hooks sur de faux événements
 ```
 
@@ -126,7 +126,12 @@ Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, 
 - Testé sur macOS. Sous Windows, la commande `python3` des hooks peut devoir devenir `python`.
 - Une liste nommée (`CLAUDE_CODE_TASK_LIST_ID`) sans transcript associé n’est pas reliée au dossier ouvert.
 - Sur les anciens modèles, où les outils existent sans la variable, le blocage de secours reste inactif.
-- Les polices de marque (Bricolage Grotesque, JetBrains Mono) ne sont pas embarquées : la vue prend celles du système et de l’éditeur.
+- Les polices embarquées couvrent l’alphabet latin (français compris) ; les autres écritures passent par les polices du système.
+
+## Crédits
+
+- **Bricolage Grotesque** — © The Bricolage Grotesque Project Authors · **JetBrains Mono** — © The JetBrains Mono Project Authors.
+  Toutes deux sous [SIL Open Font License 1.1](https://openfontlicense.org), embarquées dans l’extension et dans les visuels de ce README ; les textes de licence sont dans `vscode/media/fonts/`.
 
 <br>
 

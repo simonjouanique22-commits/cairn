@@ -2,7 +2,7 @@
   "name": "cairn",
   "displayName": "Cairn — la roadmap de Claude Code",
   "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en planche vivante, les fichiers touchés par étape, et « Claude t'attend ».",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "local",
   "icon": "media/icon.png",
   "galleryBanner": { "color": "#F4F0E8", "theme": "light" },
