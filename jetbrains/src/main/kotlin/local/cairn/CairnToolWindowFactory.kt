@@ -13,48 +13,50 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import java.io.File
+import java.util.Locale
 import javax.swing.JComponent
 import javax.swing.SwingConstants
 import javax.swing.Timer
 
 /**
- * Fenêtre d'outils « Cairn » : lance la vue universelle de Cairn (web/serve.js, Node.js) pour le projet ouvert,
- * sur 127.0.0.1 uniquement, et l'affiche dans le navigateur intégré de l'IDE. Le serveur s'arrête avec la fenêtre.
- * Emplacement de Cairn : variable CAIRN_HOME, sinon ~/.claude/plugins/local/cairn.
+ * "Cairn" tool window: starts Cairn's universal view (web/serve.js, Node.js) for the open project, on 127.0.0.1 only,
+ * and shows it in the IDE's embedded browser. The server stops with the window.
+ * Where Cairn lives: CAIRN_HOME variable, else ~/.claude/plugins/local/cairn.
  */
 class CairnToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val contenu = ContentFactory.getInstance().createContent(vue(project, toolWindow.disposable), "", false)
-        toolWindow.contentManager.addContent(contenu)
+        val content = ContentFactory.getInstance().createContent(view(project, toolWindow.disposable), "", false)
+        toolWindow.contentManager.addContent(content)
     }
 
-    private fun vue(project: Project, parent: Disposable): JComponent {
-        val racine = System.getenv("CAIRN_HOME") ?: "${System.getProperty("user.home")}/.claude/plugins/local/cairn"
-        val serveur = File(racine, "web/serve.js")
-        val dossier = project.basePath ?: return message("Ouvrez un projet pour voir sa roadmap.")
-        if (!serveur.isFile) return message("Cairn introuvable : ${serveur.path}")
+    private fun view(project: Project, parent: Disposable): JComponent {
+        val root = System.getenv("CAIRN_HOME") ?: "${System.getProperty("user.home")}/.claude/plugins/local/cairn"
+        val server = File(root, "web/serve.js")
+        val folder = project.basePath ?: return message("Open a project to see its roadmap.")
+        if (!server.isFile) return message("Cairn not found: ${server.path}")
         val node = PathEnvironmentVariableUtil.findInPath("node")
             ?: listOf("/opt/homebrew/bin/node", "/usr/local/bin/node", "/usr/bin/node").map(::File).firstOrNull { it.canExecute() }
-            ?: return message("Node.js introuvable : installez-le pour afficher la roadmap.")
+            ?: return message("Node.js not found: install it to show the roadmap.")
 
-        // Un port par projet, pour que plusieurs projets ouverts aient chacun leur roadmap.
-        val port = 4823 + Math.floorMod(dossier.hashCode(), 500)
-        val adresse = "http://127.0.0.1:$port"
-        val processus = ProcessBuilder(node.path, serveur.path, dossier, "--port", port.toString())
+        // One port per project, so that several open projects each get their own roadmap.
+        val port = 4823 + Math.floorMod(folder.hashCode(), 500)
+        val address = "http://127.0.0.1:$port"
+        val lang = if (Locale.getDefault().language == "fr") "fr" else "en"
+        val process = ProcessBuilder(node.path, server.path, folder, "--port", port.toString(), "--lang", lang)
             .redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.DISCARD)
             .start()
-        Disposer.register(parent, Disposable { processus.destroy() })
+        Disposer.register(parent, Disposable { process.destroy() })
 
         if (!JBCefApp.isSupported()) {
-            Timer(800) { BrowserUtil.browse(adresse) }.apply { isRepeats = false; start() }
-            return message("Navigateur intégré indisponible : la roadmap s'ouvre dans votre navigateur ($adresse).")
+            Timer(800) { BrowserUtil.browse(address) }.apply { isRepeats = false; start() }
+            return message("Embedded browser unavailable: the roadmap opens in your browser ($address).")
         }
-        val navigateur = JBCefBrowser.createBuilder().build()
-        Disposer.register(parent, navigateur)
-        Timer(800) { navigateur.loadURL(adresse) }.apply { isRepeats = false; start() } // le temps que le serveur démarre
-        return navigateur.component
+        val browser = JBCefBrowser.createBuilder().build()
+        Disposer.register(parent, browser)
+        Timer(800) { browser.loadURL(address) }.apply { isRepeats = false; start() } // give the server time to start
+        return browser.component
     }
 
-    private fun message(texte: String): JComponent = JBLabel(texte, SwingConstants.CENTER)
+    private fun message(text: String): JComponent = JBLabel(text, SwingConstants.CENTER)
 }

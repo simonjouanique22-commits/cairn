@@ -1,5 +1,5 @@
-# À chaque tag vX.Y.Z : tests, extension VS Code (.vsix) et plugin JetBrains (.zip), joints à une release GitHub.
-# Actions épinglées par empreinte de commit (version entre parenthèses).
+# On every vX.Y.Z tag: tests, VS Code extension (.vsix) and JetBrains plugin (.zip), attached to a GitHub release.
+# Actions pinned by commit hash (version in brackets).
 name: release
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
           node-version: 22
       - name: Tests
         run: python3 check.py && node vscode/test.js && node web/test.js
-      - name: Paquet de l'extension
+      - name: Extension package
         working-directory: vscode
         run: npx --yes @vscode/vsce@3 package --no-dependencies --allow-missing-repository --skip-license -o "cairn-${GITHUB_REF_NAME}.vsix"
       - name: Release
@@ -35,10 +35,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # (v6.4.1)
         with:
           gradle-version: '8.14.3'
-      - name: Plugin JetBrains
+      - name: JetBrains plugin
         working-directory: jetbrains
         run: gradle buildPlugin --no-daemon
-      - name: Ajout à la release
+      - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

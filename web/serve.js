@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Vue universelle de Cairn : la même roadmap que dans VS Code, servie sur http://127.0.0.1:4823 pour l'ouvrir à côté de
-// n'importe quel éditeur (JetBrains, Zed, Neovim, Sublime Text…). Lecture seule, accessible uniquement depuis ce poste.
-//   node web/serve.js [dossier du projet] [--port 4823] [--lang fr|en] [--open]
+// Cairn's universal view: the same roadmap as in VS Code, served on http://127.0.0.1:4823 to open next to any editor
+// (JetBrains, Zed, Neovim, Sublime Text…). Read-only, reachable from this machine only.
+//   node web/serve.js [project folder] [--port 4823] [--lang en|fr] [--open]
 const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
@@ -10,88 +10,88 @@ const { execFileSync, spawn } = require('child_process');
 const cairn = require('../vscode/extension.js');
 
 const args = process.argv.slice(2);
-const option = (nom, defaut) => { const i = args.indexOf(nom); return i >= 0 ? args[i + 1] : defaut; };
+const option = (name, fallback) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : fallback; };
 const PORT = Number(option('--port', 4823));
 const LANG = option('--lang', (process.env.LANG || '').toLowerCase().startsWith('fr') ? 'fr' : 'en');
-const brut = args.find((a, i) => !a.startsWith('--') && !['--port', '--lang'].includes(args[i - 1])) || process.cwd();
-const DOSSIER = (() => { try { return fs.realpathSync.native(path.resolve(brut)); } catch { return path.resolve(brut); } })();
-const POLICES = path.join(__dirname, '..', 'vscode', 'media', 'fonts');
-const HOTES = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
+const raw = args.find((a, i) => !a.startsWith('--') && !['--port', '--lang'].includes(args[i - 1])) || process.cwd();
+const FOLDER = (() => { try { return fs.realpathSync.native(path.resolve(raw)); } catch { return path.resolve(raw); } })();
+const FONTS = path.join(__dirname, '..', 'vscode', 'media', 'fonts');
+const HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 
-let choisi = null, sessions = [], dernier = '';
+let chosen = null, sessions = [], last = '';
 const clients = new Set();
 
-// Fichiers que git voit modifiés dans le projet (commande en lecture seule, sans shell).
-function changesGit() {
+// Files git sees as changed in the project (read-only command, no shell).
+function gitChanges() {
   try {
-    const sortie = execFileSync('git', ['status', '--porcelain', '-z', '-uall'], { cwd: DOSSIER, timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
-    const racine = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: DOSSIER, timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
-    return sortie.split('\0').filter((e) => e.length > 3).map((e) => path.join(racine, e.slice(3)));
+    const out = execFileSync('git', ['status', '--porcelain', '-z', '-uall'], { cwd: FOLDER, timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+    const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: FOLDER, timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return out.split('\0').filter((e) => e.length > 3).map((e) => path.join(root, e.slice(3)));
   } catch { return []; }
 }
 
-function etat() {
+function state() {
   const now = Date.now();
-  sessions = cairn.loadSessions([DOSSIER]);
+  sessions = cairn.loadSessions([FOLDER]);
   const latest = sessions[0];
-  if (!sessions.some((s) => s.sid === choisi)) choisi = null;
-  const r = sessions.find((s) => s.sid === choisi) || latest || null;
-  const tr = r ? cairn.traceOf(r.sid) : cairn.traceVide();
-  const cmdFiles = r ? cairn.filesParCommande(r.tasks, tr, changesGit(), now) : {};
-  const signal = cairn.readSignal([DOSSIER], cairn.CLAUDE_DIR, now);
-  const actives = sessions.filter((s) => now - s.mtime < 2 * 3600e3);
-  const pills = actives.length > 1 ? actives : [];
-  const journal = sessions.filter((s) => s.sid !== r?.sid && !pills.includes(s)).slice(0, 8);
-  return JSON.stringify({ type: 'state', html: cairn.renderApp(r, { files: tr.files, cmdFiles, signal, pills, journal, latestSid: latest?.sid, now, lang: LANG }),
-    annonce: cairn.annonce(r, signal, LANG) });
+  if (!sessions.some((s) => s.sid === chosen)) chosen = null;
+  const r = sessions.find((s) => s.sid === chosen) || latest || null;
+  const tr = r ? cairn.traceOf(r.sid) : cairn.emptyTrace();
+  const cmdFiles = r ? cairn.filesByCommand(r.tasks, tr, gitChanges(), now) : {};
+  const signal = cairn.readSignal([FOLDER], cairn.CLAUDE_DIR, now);
+  const active = sessions.filter((s) => now - s.mtime < 2 * 3600e3);
+  const pills = active.length > 1 ? active : [];
+  const log = sessions.filter((s) => s.sid !== r?.sid && !pills.includes(s)).slice(0, 8);
+  return JSON.stringify({ type: 'state', html: cairn.renderApp(r, { files: tr.files, cmdFiles, signal, pills, log, latestSid: latest?.sid, now, lang: LANG }),
+    announcement: cairn.announcement(r, signal, LANG) });
 }
 
-function diffuser(force) {
-  const m = etat();
-  if (m === dernier && !force) return;
-  dernier = m;
+function broadcast(force) {
+  const m = state();
+  if (m === last && !force) return;
+  last = m;
   for (const res of clients) res.write(`data: ${m}\n\n`);
 }
 
-const securite = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' };
-const serveur = http.createServer((req, res) => {
-  // Contre le « DNS rebinding » : seules les adresses locales de ce serveur sont acceptées.
-  if (!HOTES.has(req.headers.host)) { res.writeHead(403, securite).end(); return; }
+const secure = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' };
+const server = http.createServer((req, res) => {
+  // Against DNS rebinding: only this server's local addresses are accepted.
+  if (!HOSTS.has(req.headers.host)) { res.writeHead(403, secure).end(); return; }
   const url = new URL(req.url, `http://${req.headers.host}`);
   if (req.method === 'GET' && url.pathname === '/') {
     const nonce = crypto.randomBytes(16).toString('base64');
-    res.writeHead(200, { ...securite, 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(cairn.shell(nonce, "'self'", cairn.polices((f) => `/fonts/${f}`), true));
+    res.writeHead(200, { ...secure, 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(cairn.shell(nonce, "'self'", cairn.fontFaces((f) => `/fonts/${f}`), true, LANG));
   } else if (req.method === 'GET' && url.pathname === '/events') {
-    res.writeHead(200, { ...securite, 'Content-Type': 'text/event-stream', Connection: 'keep-alive' });
+    res.writeHead(200, { ...secure, 'Content-Type': 'text/event-stream', Connection: 'keep-alive' });
     clients.add(res);
-    res.write(`data: ${dernier || etat()}\n\n`);
+    res.write(`data: ${last || state()}\n\n`);
     req.on('close', () => clients.delete(res));
   } else if (req.method === 'GET' && /^\/fonts\/(BricolageGrotesque|JetBrainsMono)\.woff2$/.test(url.pathname)) {
-    res.writeHead(200, { ...securite, 'Content-Type': 'font/woff2' });
-    fs.createReadStream(path.join(POLICES, path.basename(url.pathname))).pipe(res);
+    res.writeHead(200, { ...secure, 'Content-Type': 'font/woff2' });
+    fs.createReadStream(path.join(FONTS, path.basename(url.pathname))).pipe(res);
   } else if (req.method === 'POST' && url.pathname === '/action') {
-    let corps = '';
-    req.on('data', (d) => { corps += d; if (corps.length > 1024) req.destroy(); });
+    let body = '';
+    req.on('data', (d) => { body += d; if (body.length > 1024) req.destroy(); });
     req.on('end', () => {
       try {
-        const m = JSON.parse(corps);
-        if (m.type === 'select' && sessions.some((s) => s.sid === m.sid)) { choisi = m.sid; diffuser(true); }
-      } catch { /* ignoré */ }
-      res.writeHead(204, securite).end();
+        const m = JSON.parse(body);
+        if (m.type === 'select' && sessions.some((s) => s.sid === m.sid)) { chosen = m.sid; broadcast(true); }
+      } catch { /* ignored */ }
+      res.writeHead(204, secure).end();
     });
   } else {
-    res.writeHead(404, securite).end();
+    res.writeHead(404, secure).end();
   }
 });
 
-serveur.listen(PORT, '127.0.0.1', () => {
-  const adresse = `http://127.0.0.1:${PORT}`;
-  console.log(`Cairn · roadmap de ${DOSSIER}\n→ ${adresse}  (Ctrl+C pour arrêter)`);
+server.listen(PORT, '127.0.0.1', () => {
+  const address = `http://127.0.0.1:${PORT}`;
+  console.log(`Cairn · roadmap of ${FOLDER}\n→ ${address}  (Ctrl+C to stop)`);
   if (args.includes('--open')) {
-    const [cmd, ...a] = process.platform === 'darwin' ? ['open', adresse] : process.platform === 'win32' ? ['cmd', '/c', 'start', '', adresse] : ['xdg-open', adresse];
+    const [cmd, ...a] = process.platform === 'darwin' ? ['open', address] : process.platform === 'win32' ? ['cmd', '/c', 'start', '', address] : ['xdg-open', address];
     spawn(cmd, a, { stdio: 'ignore', detached: true }).unref();
   }
 });
-setInterval(() => diffuser(false), 2000);
+setInterval(() => broadcast(false), 2000);
 setInterval(() => { for (const res of clients) res.write(': ping\n\n'); }, 25000);

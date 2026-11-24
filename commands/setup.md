@@ -1,16 +1,16 @@
 ---
-description: Vérifie et répare l'installation de Cairn (outils de tâches, extension VS Code)
+description: Check and repair the Cairn installation (task tools, editor extensions)
 allowed-tools: Bash(python3:*)
 ---
 
-Vérifie l'installation de Cairn pour l'utilisateur.
+Check the Cairn installation for the user.
 
-1. Lance `python3 "${CLAUDE_PLUGIN_ROOT}/setup.py"`. Si la variable n'est pas remplacée, le dossier du plugin Cairn
-   est indiqué dans le contexte de démarrage de la session (« Plugin Cairn installé dans … »).
-2. Présente le résultat en français, une ligne par point, sans jargon.
-3. S'il reste des « ✗ », liste précisément ce que `--fix` va changer (ajout d'une variable dans
-   `~/.claude/settings.json`, installation de l'extension VS Code) et demande son accord.
-4. Seulement après son accord, lance la même commande avec `--fix`, puis montre le nouveau résultat.
-   Si la variable vient d'être ajoutée, rappelle qu'il faut relancer Claude Code.
+1. Run `python3 "${CLAUDE_PLUGIN_ROOT}/setup.py"`. If the variable is not substituted, the Cairn plugin folder is given
+   in the session start context ("Cairn plugin installed in …").
+2. Present the result in the user's language, one line per item, without jargon.
+3. If any "✗" remain, list exactly what `--fix` will change (a variable added to `~/.claude/settings.json`, the editor
+   extension installed) and ask for their consent.
+4. Only after they agree, run the same command with `--fix`, then show the new result.
+   If the variable was just added, remind them to restart Claude Code.
 
-Ne modifie rien d'autre que ce que `setup.py --fix` modifie.
+Do not change anything beyond what `setup.py --fix` changes.

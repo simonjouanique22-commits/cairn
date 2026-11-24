@@ -1,7 +1,7 @@
 ---
-description: Met en pause le blocage de Cairn pour cette session (la roadmap reste affichée)
+description: Pause Cairn's blocking for this session (the roadmap stays visible)
 ---
 
-Le hook de Cairn vient d'enregistrer la pause pour cette session : il ne bloquera plus d'action faute de roadmap.
-Confirme-le à l'utilisateur en une phrase, et précise que `/cairn:reprise` rétablit le fonctionnement normal.
-Continue à tenir la roadmap avec TaskCreate/TaskUpdate quand une demande compte plusieurs étapes.
+The Cairn hook has just recorded the pause for this session: it will no longer block an action for lack of a roadmap.
+Confirm it to the user in one sentence, in their language, and mention that `/cairn:resume` turns it back on.
+Keep maintaining the roadmap with TaskCreate/TaskUpdate when a request has several steps.

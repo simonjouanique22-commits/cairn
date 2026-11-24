@@ -1,5 +1,5 @@
 {
   "name": "cairn",
-  "version": "1.2.0",
-  "description": "Cairn — le plan de Claude, pierre après pierre : Claude découpe les grosses demandes en roadmap et la tient à jour ; l'extension VS Code du dossier vscode/ l'affiche, avec les fichiers touchés par étape et « Claude t'attend »."
+  "version": "1.3.0",
+  "description": "Cairn — Claude's plan, stone by stone: Claude splits large requests into a roadmap and keeps it up to date; the editor views (VS Code family, JetBrains, Vim/Neovim, any browser) show it, with the files touched at each step and \"Claude is waiting for you\"."
 }

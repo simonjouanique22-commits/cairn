@@ -5,7 +5,7 @@
     {
       "name": "cairn",
       "source": "./",
-      "description": "Le plan de Claude, pierre après pierre : roadmap des grosses demandes, tenue à jour et affichée dans VS Code."
+      "description": "Claude's plan, stone by stone: a roadmap for large requests, kept up to date and shown in your editor."
     }
   ]
 }

@@ -1,5 +1,5 @@
-# À chaque envoi : tests sur Linux, macOS et Windows, et compilation du plugin JetBrains.
-# Actions épinglées par empreinte de commit (version entre parenthèses).
+# On every push: tests on Linux, macOS and Windows, and a build of the JetBrains plugin.
+# Actions pinned by commit hash (version in brackets).
 name: tests
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         run: python check.py
       - name: Extension
         run: node vscode/test.js
-      - name: Vue universelle
+      - name: Universal view
         run: node web/test.js
       - name: Vim
         if: runner.os != 'Windows'
@@ -42,6 +42,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # (v6.4.1)
         with:
           gradle-version: '8.14.3'
-      - name: Plugin JetBrains
+      - name: JetBrains plugin
         working-directory: jetbrains
         run: gradle buildPlugin --no-daemon

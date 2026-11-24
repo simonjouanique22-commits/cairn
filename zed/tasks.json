@@ -1,6 +1,6 @@
 [
   {
-    "label": "Cairn : roadmap de Claude",
+    "label": "Cairn: Claude's roadmap",
     "command": "node \"$HOME/.claude/plugins/local/cairn/web/serve.js\" \"$ZED_WORKTREE_ROOT\" --open",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,

@@ -1,142 +1,144 @@
+<p align="right"><b>English</b> · <a href="README.fr.md">Français</a></p>
+
 <p align="center">
-  <img src="assets/hero.svg" width="100%" alt="cairn — le plan de Claude, pierre après pierre">
+  <img src="assets/hero.svg" width="100%" alt="cairn — Claude's plan, stone by stone">
 </p>
 
 <p align="center">
-  <img src="assets/stickers.svg" width="720" alt="zéro appel réseau · aucune dépendance · clair et sombre automatiques · fait avec Claude">
+  <img src="assets/stickers.svg" width="720" alt="zero network calls · no dependencies · automatic light and dark · made with Claude">
 </p>
 
 <p align="center">
-  <b>Sur une grosse demande, Claude Code se fait une liste d’étapes… et la garde pour lui.</b><br>
-  Cairn l’oblige à la poser, et l’affiche à côté de ton code comme une vraie roadmap :<br>
-  ce qui est fait, ce qui se passe, ce qui reste — et quand c’est à toi de jouer.
+  <b>On a big request, Claude Code makes itself a list of steps… and keeps it to itself.</b><br>
+  Cairn makes it lay that list out, and shows it next to your code as a real roadmap:<br>
+  what's done, what's happening, what's left — and when it's your turn.
 </p>
 
 <p align="center">
-  <img src="assets/demo.svg" width="300" alt="Démo animée : une étape se termine, la suivante arrive, Claude attend une autorisation, puis le sommet est atteint">
+  <img src="assets/demo.svg" width="300" alt="Animated demo: a step finishes, the next one starts, Claude waits for a permission, then the summit is reached">
 </p>
 
 <table align="center">
   <tr>
-    <td align="center"><img src="assets/screen-clair.svg" width="250" alt="Roadmap en cours, thème clair, avec les fichiers touchés par étape"></td>
-    <td align="center"><img src="assets/screen-sombre.svg" width="250" alt="Roadmap en cours, thème sombre, Claude attend une autorisation"></td>
-    <td align="center"><img src="assets/screen-sommet.svg" width="250" alt="Roadmap terminée : sommet atteint"></td>
+    <td align="center"><img src="assets/screen-light.svg" width="250" alt="Roadmap in progress, light theme, with the files touched at each step"></td>
+    <td align="center"><img src="assets/screen-dark.svg" width="250" alt="Roadmap in progress, dark theme, Claude is waiting for a permission"></td>
+    <td align="center"><img src="assets/screen-summit.svg" width="250" alt="Finished roadmap: summit reached"></td>
   </tr>
   <tr>
-    <td align="center"><b>En route</b><br><sub>les fichiers touchés sous chaque étape</sub></td>
-    <td align="center"><b>Claude t’attend</b><br><sub>autocollant, barre d’état, notification</sub></td>
-    <td align="center"><b>Sommet atteint</b><br><sub>le cairn se complète</sub></td>
+    <td align="center"><b>On the way</b><br><sub>the files touched under each step</sub></td>
+    <td align="center"><b>Claude is waiting for you</b><br><sub>sticker, status bar, notification</sub></td>
+    <td align="center"><b>Summit reached</b><br><sub>the cairn is complete</sub></td>
   </tr>
 </table>
 
-## Comment ça marche
+## How it works
 
 <p align="center">
-  <img src="assets/flow.svg" width="100%" alt="1. Claude Code découpe la demande en étapes. 2. Le plugin Cairn l’oblige à poser sa roadmap et la suit. 3. L’éditeur l’affiche en direct.">
+  <img src="assets/flow.svg" width="100%" alt="1. Claude Code splits the request into steps. 2. The Cairn plugin makes it lay out its roadmap, then tracks it. 3. Your editor shows it live.">
 </p>
 
-- **Claude Code** sait découper un travail en étapes (`TaskCreate`, `TaskUpdate`)… quand il y pense.
-- **Le plugin Cairn** lui donne la règle au démarrage de chaque session. S’il enchaîne 3 actions qui modifient quelque chose sans roadmap, la 3ᵉ est bloquée une seule fois, le temps qu’il la pose. Il note aussi quand Claude attend une autorisation ou a fini son tour.
-- **Ton éditeur** dessine la roadmap de la session lancée dans le dossier ouvert, en direct :
+- **Claude Code** can split work into steps (`TaskCreate`, `TaskUpdate`)… when it thinks of it.
+- **The Cairn plugin** gives it the rule at the start of every session. If it chains 3 actions that change something without a roadmap, the 3rd one is blocked — once — while it lays one out. It also notes when Claude is waiting for a permission or has finished its turn.
+- **Your editor** draws the roadmap of the session started in the open folder, live:
 
 | | |
 | --- | --- |
-| **Claude t’attend** | Autocollant qui clignote, barre d’état en alerte, notification avec « Ouvrir le terminal ». |
-| **Avant / après** | Sous chaque étape, les fichiers touchés. Un clic ouvre la comparaison *avant l’étape ↔ maintenant*. Les fichiers modifiés par une commande (`sed -i`, script…) apparaissent en pointillés. |
-| **Vue vivante** | Seul ce qui change bouge : la nouvelle étape arrive en animation, le chrono avance tout seul. |
-| **Plusieurs sessions** | Deux Claude dans le même dossier ? Des pastilles pour passer de l’une à l’autre. |
-| **Journal** | Les roadmaps passées du projet ; une roadmap ancienne est grisée et datée. |
+| **Claude is waiting for you** | Blinking sticker, status bar on alert, notification with "Open terminal". |
+| **Before / after** | Under each step, the files it touched. One click opens the *before the step ↔ now* diff. Files changed by a command (`sed -i`, a script…) show up dashed. |
+| **Live view** | Only what changes moves: the new step slides in, the timer ticks on its own. |
+| **Several sessions** | Two Claudes in the same folder? Pills to switch between them. |
+| **Log** | The project's past roadmaps; an old roadmap is greyed out and dated. |
 
-## Dans ton éditeur
+## In your editor
 
-| Éditeur | Comment | Vérifié |
+| Editor | How | Verified |
 | --- | --- | --- |
-| **VS Code** | Extension (barre d’activité « Cairn ») | Oui : installée et utilisée en vrai ; chaque version testée |
-| **Cursor, Windsurf, VSCodium** | La même extension (`/cairn:setup` l’installe dans ceux qu’il trouve) | Non : pas encore essayée dans ces éditeurs |
-| **VS Code à distance** (SSH, WSL, conteneurs) | L’extension tourne là où tourne Claude Code | Non |
-| **JetBrains** (IntelliJ, PyCharm, WebStorm…) | Plugin natif : fenêtre d’outils « Cairn » avec navigateur intégré | Compilé par la CI GitHub ; pas encore lancé dans un IDE |
-| **Vim** | `:Cairn` ouvre un panneau latéral mis à jour en direct | Oui : testé avec Vim 9.1 |
-| **Neovim** | Le même plugin (Vimscript) | Non : même code, pas encore essayé |
-| **Zed** | Tâche qui ouvre la vue universelle (Zed n’a pas de panneau pour les extensions) | Non |
-| **Tous les autres** (Sublime Text, Emacs, Xcode…) | **Vue universelle** dans le navigateur | Oui : testée dans un navigateur |
+| **VS Code** | Extension ("Cairn" in the activity bar) | Yes: installed and used for real; every release tested |
+| **Cursor, Windsurf, VSCodium** | The same extension (`/cairn:setup` installs it in the ones it finds) | No: not tried in these editors yet |
+| **Remote VS Code** (SSH, WSL, containers) | The extension runs where Claude Code runs | No |
+| **JetBrains** (IntelliJ, PyCharm, WebStorm…) | Native plugin: "Cairn" tool window with an embedded browser | Built by GitHub CI; not run in an IDE yet |
+| **Vim** | `:Cairn` opens a side panel updated live | Yes: tested with Vim 9.1 |
+| **Neovim** | The same plugin (Vimscript) | No: same code, not tried yet |
+| **Zed** | A task that opens the universal view (Zed has no panel for extensions) | No |
+| **Everything else** (Sublime Text, Emacs, Xcode…) | **Universal view** in the browser | Yes: tested in a browser |
 
-## Installer
+## Install
 
-**1 · Le plugin Claude Code**, depuis une copie de ce dépôt :
+**1 · The Claude Code plugin**, from a copy of this repository:
 
 ```bash
 claude plugin marketplace add ./cairn
 claude plugin install cairn@cairn-local
 ```
 
-**2 · Le reste, en une commande.** Dans Claude Code :
+**2 · The rest, in one command.** In Claude Code:
 
 ```
 /cairn:setup
 ```
 
-Elle vérifie que les outils de tâches sont activés (sur les modèles récents, Claude Code ne fournit `TaskCreate` et `TaskUpdate` qu’avec `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), installe l’extension dans VS Code, Cursor, Windsurf ou VSCodium s’ils sont là, et ne change rien sans ton accord. Relance ensuite Claude Code.
+It checks that the task tools are enabled (on recent models, Claude Code only provides `TaskCreate` and `TaskUpdate` with `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), installs the extension in VS Code, Cursor, Windsurf or VSCodium if they are there, and changes nothing without your consent. Then restart Claude Code.
 
 <details>
-<summary><b>Autres éditeurs</b></summary>
+<summary><b>Other editors</b></summary>
 
-- **Vue universelle** (n’importe quel éditeur) : `node cairn/web/serve.js <dossier du projet> --open` ouvre la roadmap sur `http://127.0.0.1:4823`. Lecture seule, accessible uniquement depuis ton poste ; un clic sur un fichier copie son chemin.
-- **JetBrains** : *Settings › Plugins › ⚙ › Install Plugin from Disk…* avec le `cairn-jetbrains-vX.Y.Z.zip` de la release, puis la fenêtre d’outils **Cairn**. Il faut Node.js ; Cairn est cherché dans `~/.claude/plugins/local/cairn` (ou `CAIRN_HOME`).
-- **Vim** : `set runtimepath+=~/.claude/plugins/local/cairn/vim` dans le `.vimrc`, puis `:Cairn`.
-- **Neovim** : `vim.opt.runtimepath:append(vim.fn.expand('~/.claude/plugins/local/cairn/vim'))`, puis `:Cairn`.
-- **Zed** : copier `zed/tasks.json` dans `~/.config/zed/tasks.json`, puis lancer la tâche « Cairn : roadmap de Claude ».
-- **Sans `/cairn:setup`** : `python3 cairn/setup.py` (état des lieux), `python3 cairn/setup.py --fix` (corrige). Le `.vsix` est aussi joint à chaque release.
+- **Universal view** (any editor): `node cairn/web/serve.js <project folder> --open` opens the roadmap on `http://127.0.0.1:4823`. Read-only, reachable from your machine only; clicking a file copies its path. `--lang fr` for French.
+- **JetBrains**: *Settings › Plugins › ⚙ › Install Plugin from Disk…* with the release's `cairn-jetbrains-vX.Y.Z.zip`, then the **Cairn** tool window. Needs Node.js; Cairn is looked up in `~/.claude/plugins/local/cairn` (or `CAIRN_HOME`).
+- **Vim**: `set runtimepath+=~/.claude/plugins/local/cairn/vim` in your `.vimrc`, then `:Cairn`. The panel is in French when `v:lang` is (or with `let g:cairn_lang = 'fr'`).
+- **Neovim**: `vim.opt.runtimepath:append(vim.fn.expand('~/.claude/plugins/local/cairn/vim'))`, then `:Cairn`.
+- **Zed**: copy `zed/tasks.json` to `~/.config/zed/tasks.json`, then run the task "Cairn: Claude's roadmap".
+- **Without `/cairn:setup`**: `python3 cairn/setup.py` (check), `python3 cairn/setup.py --fix` (repair). The `.vsix` is also attached to every release.
 
 </details>
 
-## Commandes
+## Commands
 
-| Où | Commande | Effet |
+| Where | Command | Effect |
 | --- | --- | --- |
-| Claude Code | `/cairn:setup` | Vérifie et répare l’installation. |
-| Claude Code | `/cairn:pause` · `/cairn:reprise` | Coupe puis rétablit le blocage pour la session en cours. |
-| VS Code (palette) | « Cairn : Ouvrir la roadmap » · « Réglages » · « Rafraîchir » | |
-| Vim / Neovim | `:Cairn` | Ouvre ou ferme le panneau. |
+| Claude Code | `/cairn:setup` | Checks and repairs the installation. |
+| Claude Code | `/cairn:pause` · `/cairn:resume` | Turns blocking off, then back on, for the current session. |
+| VS Code (palette) | "Cairn: Open the roadmap" · "Settings" · "Refresh" | |
+| Vim / Neovim | `:Cairn` | Opens or closes the panel. |
 
-## Réglages
+## Settings
 
-| Réglage | Par défaut | Effet |
+| Setting | Default | Effect |
 | --- | --- | --- |
-| `cairn.accent` · `cairn.pop` (VS Code) | bleu · rose | Couleurs de l’étape en cours et des autocollants. |
-| `cairn.staleHours` (VS Code) | `2` | Au-delà, une roadmap est grisée comme ancienne. |
-| `cairn.notifications` (VS Code) | activé | Notification quand Claude t’attend. |
-| `cairn.language` (VS Code) | `auto` | Français ou anglais, selon VS Code. |
-| `CAIRN_SEUIL` (environnement de Claude) | `3` | Actions tolérées avant d’exiger la roadmap. |
-| `window.autoDetectColorScheme` (VS Code) | désactivé | Activé, le thème de VS Code, donc celui de Cairn, suit le système. |
-| <kbd>Ctrl</kbd>+<kbd>T</kbd> dans Claude Code | — | Replie la liste de tâches du terminal : la roadmap vit dans l’éditeur. |
+| `cairn.accent` · `cairn.pop` (VS Code) | blue · pink | Colors of the step in progress and of the stickers. |
+| `cairn.staleHours` (VS Code) | `2` | Past this, a roadmap is greyed out as old. |
+| `cairn.notifications` (VS Code) | on | Notification when Claude is waiting for you. |
+| `cairn.language` (VS Code) | `auto` | English or French, following VS Code. |
+| `CAIRN_THRESHOLD` (Claude's environment) | `3` | Actions allowed before the roadmap is required. |
+| `window.autoDetectColorScheme` (VS Code) | off | On, VS Code's theme — and so Cairn's — follows the system. |
+| <kbd>Ctrl</kbd>+<kbd>T</kbd> in Claude Code | — | Folds the terminal's task list: the roadmap lives in the editor. |
 
-Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
+Turn the plugin off: `claude plugin disable cairn@cairn-local`.
 
-## Sous le capot
+## Under the hood
 
-- **Rien ne sort du poste.** Aucun appel réseau, aucune dépendance : Python et Node standard. La vue universelle n’écoute que sur `127.0.0.1` et refuse les requêtes adressées à un autre nom.
-- **Le minimum lu.** Les fichiers de tâches de Claude Code ; dans les transcripts, seulement le dossier de lancement, les changements d’étape, les *chemins* des fichiers écrits et les références des copies « avant » — jamais le contenu des messages. Les copies elles-mêmes ne sont lues que pour la comparaison que tu ouvres, en lecture seule.
-- **Le minimum écrit.** Un petit fichier d’état par session dans `~/.claude/cairn/` (« attend », « a fini », « en pause »), et un compteur dans le dossier temporaire.
-- **Vue verrouillée.** Un seul script, le sien, autorisé par jeton ; aucune ressource externe — les polices de marque sont embarquées ; le texte des tâches est échappé ; seuls les fichiers repérés dans le transcript ou par git peuvent être ouverts d’un clic.
-- **Accessible.** Avancement et « Claude t’attend » annoncés aux lecteurs d’écran ; focus visible au clavier ; contrastes vérifiés automatiquement ; animations coupées si le système le demande.
-- **Sobre.** Relecture toutes les 2 s au premier plan, toutes les 15 s en arrière-plan.
-- **Jamais bloquant par erreur.** Si le plugin plante, Claude continue. Dans l’app de bureau Claude, qui a sa propre liste de tâches, il se met en veille.
+- **Nothing leaves your machine.** No network calls, no dependencies: plain Python and Node. The universal view only listens on `127.0.0.1` and refuses requests addressed to any other name.
+- **Reads the minimum.** Claude Code's task files; in transcripts, only the launch folder, step changes, the *paths* of written files and the references of the "before" backups — never message content. The backups themselves are only read for the diff you open, read-only.
+- **Writes the minimum.** A small state file per session in `~/.claude/cairn/` ("waiting", "done", "paused"), and a counter in the temp folder.
+- **Locked-down view.** One script, its own, allowed by nonce; no external resource — the brand fonts are embedded; task text is escaped; only files found in the transcript or by git can be opened with a click.
+- **Accessible.** Progress and "Claude is waiting for you" are announced to screen readers; visible keyboard focus; contrasts checked automatically; animations off when the system asks.
+- **Light.** Re-reads every 2 s in the foreground, every 15 s in the background.
+- **Never blocks by mistake.** If the plugin crashes, Claude carries on. In the Claude desktop app, which has its own task list, it stays idle.
 
 <details>
-<summary><b>Ce que contient le dépôt</b></summary>
+<summary><b>What's in the repository</b></summary>
 
 ```
-hooks/        plugin Claude Code : cairn.py, hooks.json
-commands/     /cairn:setup, /cairn:pause, /cairn:reprise
-setup.py      vérification et réparation de l’installation
-vscode/       extension VS Code (et forks) : extension.js, icônes, polices (media/fonts, licences OFL)
-web/          vue universelle : serve.js
-jetbrains/    plugin JetBrains (Kotlin, construit par la CI)
-vim/          plugin Vim / Neovim
-zed/          tâche Zed
-assets/       logo, tampon et visuels du README (screens.js régénère captures et démo, et y embarque les polices)
-check.py      contrôle des hooks sur de faux événements
-.github/      tests sur Linux, macOS et Windows à chaque envoi ; release à chaque tag vX.Y.Z
+hooks/        Claude Code plugin: cairn.py, hooks.json
+commands/     /cairn:setup, /cairn:pause, /cairn:resume
+setup.py      checks and repairs the installation
+vscode/       VS Code extension (and forks): extension.js, icons, fonts (media/fonts, OFL licenses), English + French
+web/          universal view: serve.js
+jetbrains/    JetBrains plugin (Kotlin, built by CI)
+vim/          Vim / Neovim plugin
+zed/          Zed task
+assets/       logo, stamp and README visuals (screens.js regenerates screenshots and demo, and embeds the fonts)
+check.py      checks the hooks against fake events
+.github/      tests on Linux, macOS and Windows on every push; release on every vX.Y.Z tag
 ```
 
 </details>
@@ -145,31 +147,32 @@ check.py      contrôle des hooks sur de faux événements
 
 ```bash
 python3 check.py                      # hooks
-node vscode/test.js                   # sessions, étapes, avant/après, signaux, rendu, contrastes
-node web/test.js                      # vue universelle
-vim -Nu NONE -Es -S vim/test.vim      # plugin Vim
-python3 setup.py                      # installation (ne modifie rien sans --fix)
-node assets/screens.js                # captures et démo du README, depuis le vrai rendu
+node vscode/test.js                   # sessions, steps, before/after, signals, rendering, contrasts
+node web/test.js                      # universal view
+vim -Nu NONE -Es -S vim/test.vim      # Vim plugin
+python3 setup.py                      # installation (changes nothing without --fix)
+node assets/screens.js                # README screenshots and demo, from the real rendering
 ```
 
-Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, puis pousser un tag `vX.Y.Z`. GitHub lance les tests, construit le `.vsix` et le plugin JetBrains, et crée la release.
+Releasing: update `CHANGELOG.md` and the version numbers, then push a `vX.Y.Z` tag. GitHub runs the tests, builds the `.vsix` and the JetBrains plugin, and creates the release.
 
-## Limites connues
+## Known limits
 
-- Testé en vrai sur macOS avec VS Code. Windows et Linux sont couverts par les tests automatiques, pas encore par un usage réel ; sous Windows, les hooks cherchent `python3` puis `python`.
-- Une liste nommée (`CLAUDE_CODE_TASK_LIST_ID`) sans transcript associé n’est pas reliée au dossier ouvert.
-- Sur les anciens modèles, où les outils existent sans la variable, le blocage de secours reste inactif.
-- La comparaison « avant l’étape » dépend des copies de Claude Code ; sans copie, c’est la comparaison avec git (depuis le dernier commit).
-- Les polices embarquées couvrent l’alphabet latin (français compris) ; les autres écritures passent par les polices du système.
+- Used for real on macOS with VS Code. Windows and Linux are covered by automated tests, not by real use yet; on Windows, the hooks look for `python3`, then `python`.
+- A named list (`CLAUDE_CODE_TASK_LIST_ID`) with no transcript is not linked to the open folder.
+- On older models, where the tools exist without the variable, the fallback blocking stays inactive.
+- The "before the step" diff relies on Claude Code's backups; without one, it falls back to the git diff (since the last commit).
+- The embedded fonts cover the Latin alphabet; other scripts use the system fonts.
+- Interface languages: English and French. Adding one takes a `T` entry in `vscode/extension.js`, a `package.nls.<lang>.json` file and an `s:T` entry in the Vim plugin.
 
-## Crédits
+## Credits
 
 - **Bricolage Grotesque** — © The Bricolage Grotesque Project Authors · **JetBrains Mono** — © The JetBrains Mono Project Authors.
-  Toutes deux sous [SIL Open Font License 1.1](https://openfontlicense.org), embarquées dans l’extension et dans les visuels de ce README ; les textes de licence sont dans `vscode/media/fonts/`.
+  Both under the [SIL Open Font License 1.1](https://openfontlicense.org), embedded in the extension and in this README's visuals; the license texts are in `vscode/media/fonts/`.
 
 <br>
 
 <p align="center">
-  <img src="assets/logo.svg" width="150" alt="Tampon Cairn : le plan de Claude, pierre après pierre"><br>
-  <sub>Code écrit avec l’assistance de Claude (IA).</sub>
+  <img src="assets/logo.svg" width="150" alt="Cairn stamp: Claude Code's plan, stone by stone"><br>
+  <sub>Code written with the help of Claude (AI).</sub>
 </p>

@@ -1,0 +1,12 @@
+{
+  "displayName": "Cairn — la roadmap de Claude Code",
+  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en planche vivante, les fichiers touchés par étape (avant/après), et « Claude t'attend ».",
+  "command.open": "Ouvrir la roadmap",
+  "command.settings": "Réglages",
+  "command.refresh": "Rafraîchir",
+  "config.accent": "Couleur de l'étape en cours (hexadécimal).",
+  "config.pop": "Couleur des surlignages et autocollants (hexadécimal).",
+  "config.staleHours": "Au-delà de ce nombre d'heures sans mise à jour, une roadmap est grisée comme ancienne.",
+  "config.notifications": "Notification VS Code quand Claude attend une autorisation ou une réponse.",
+  "config.language": "Langue de la vue (auto : celle de VS Code)."
+}

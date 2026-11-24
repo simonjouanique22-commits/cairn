@@ -1,11 +1,11 @@
-// Plugin JetBrains de Cairn : construit par la CI GitHub (gradle buildPlugin), aucun outil à installer sur le poste.
+// Cairn's JetBrains plugin: built by GitHub CI (gradle buildPlugin), nothing to install on your machine.
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.1.20"
     id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
 group = "local.cairn"
-version = "1.2.0"
+version = "1.3.0"
 
 repositories {
     mavenCentral()

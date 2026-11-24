@@ -1,9 +1,8 @@
-"""python3 setup.py [--fix] — vérifie l'installation de Cairn ; avec --fix, corrige ce qui peut l'être.
+"""python3 setup.py [--fix] — checks the Cairn installation; with --fix, repairs what it can.
 
-Vérifie : la variable des outils de tâches dans ~/.claude/settings.json, l'extension dans chaque éditeur de la famille
-VS Code présent (VS Code, Cursor, Windsurf, VSCodium), la ligne des tâches de claude-hud (doublon) et les anciens liens
-laissés par le renommage. Rappelle comment ouvrir Cairn dans les autres éditeurs.
-Code de sortie : 0 si tout est en ordre, 1 sinon.
+Checks: the task tools variable in ~/.claude/settings.json, the extension in every VS Code family editor found
+(VS Code, Cursor, Windsurf, VSCodium), claude-hud's task line (duplicate) and links left over by the rename.
+Reminds how to open Cairn in other editors. Exit code: 0 when everything is fine, 1 otherwise.
 """
 import json
 import os
@@ -12,14 +11,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent
 CLAUDE_DIR = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
 SETTINGS = CLAUDE_DIR / "settings.json"
-VERSION = json.loads((RACINE / "vscode" / "package.json").read_text(encoding="utf-8"))["version"]
-VSIX = RACINE / "vscode" / "cairn.vsix"
+VERSION = json.loads((ROOT / "vscode" / "package.json").read_text(encoding="utf-8"))["version"]
+VSIX = ROOT / "vscode" / "cairn.vsix"
 LOCAL = os.environ.get("LOCALAPPDATA", "")
-# Éditeurs de la famille VS Code : commande, puis emplacements habituels (macOS, Windows).
-EDITEURS = {
+# VS Code family editors: command, then usual locations (macOS, Windows).
+EDITORS = {
     "VS Code": ["code", "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
                 rf"{LOCAL}\Programs\Microsoft VS Code\bin\code.cmd"],
     "Cursor": ["cursor", "/Applications/Cursor.app/Contents/Resources/app/bin/cursor",
@@ -31,11 +30,11 @@ EDITEURS = {
 }
 
 
-def trouver(candidats):
-    for c in candidats:
-        chemin = shutil.which(c) if os.sep not in c and "/" not in c else (c if Path(c).exists() else None)
-        if chemin:
-            return chemin
+def find(candidates):
+    for c in candidates:
+        found = shutil.which(c) if os.sep not in c and "/" not in c else (c if Path(c).exists() else None)
+        if found:
+            return found
     return None
 
 
@@ -46,24 +45,24 @@ def variable_ok():
         return False
 
 
-def poser_variable():
-    reglages = json.loads(SETTINGS.read_text(encoding="utf-8")) if SETTINGS.exists() else {}
-    reglages.setdefault("env", {})["CLAUDE_CODE_ENABLE_TODO_TOOLS"] = "1"
-    SETTINGS.write_text(json.dumps(reglages, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+def set_variable():
+    settings = json.loads(SETTINGS.read_text(encoding="utf-8")) if SETTINGS.exists() else {}
+    settings.setdefault("env", {})["CLAUDE_CODE_ENABLE_TODO_TOOLS"] = "1"
+    SETTINGS.write_text(json.dumps(settings, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def extension_installee(cli):
-    sortie = subprocess.run([cli, "--list-extensions", "--show-versions"], capture_output=True, text=True).stdout
-    return next((l.split("@")[1] for l in sortie.splitlines() if l.lower().startswith("local.cairn@")), None)
+def installed_version(cli):
+    out = subprocess.run([cli, "--list-extensions", "--show-versions"], capture_output=True, text=True).stdout
+    return next((l.split("@")[1] for l in out.splitlines() if l.lower().startswith("local.cairn@")), None)
 
 
-def construire_vsix():
-    sources = [RACINE / "vscode" / f for f in ("extension.js", "package.json")]
+def build_vsix():
+    sources = [ROOT / "vscode" / f for f in ("extension.js", "package.json")]
     if VSIX.exists() and VSIX.stat().st_mtime >= max(f.stat().st_mtime for f in sources):
-        return  # paquet à jour
+        return  # package up to date
     npx = shutil.which("npx")
     if not npx:
-        raise RuntimeError("npx introuvable : installer Node.js, ou prendre le .vsix joint à la release GitHub")
+        raise RuntimeError("npx not found: install Node.js, or use the .vsix attached to the GitHub release")
     subprocess.run([npx, "--yes", "@vscode/vsce@3", "package", "--no-dependencies", "--allow-missing-repository",
                     "--skip-license", "-o", VSIX.name], cwd=VSIX.parent, check=True, capture_output=True)
 
@@ -71,49 +70,49 @@ def construire_vsix():
 def main(fix):
     ok = True
 
-    def ligne(bon, texte, conseil=""):
+    def line(good, text, advice=""):
         nonlocal ok
-        ok &= bon
-        print(("✓ " if bon else "✗ ") + texte + ("" if bon or not conseil else f"  →  {conseil}"))
+        ok &= good
+        print(("✓ " if good else "✗ ") + text + ("" if good or not advice else f"  →  {advice}"))
 
     if not variable_ok() and fix:
-        poser_variable()
-    ligne(variable_ok(), "outils de tâches activés (CLAUDE_CODE_ENABLE_TODO_TOOLS=1)",
-          "--fix l'ajoute dans ~/.claude/settings.json, puis relancer Claude")
+        set_variable()
+    line(variable_ok(), "task tools enabled (CLAUDE_CODE_ENABLE_TODO_TOOLS=1)",
+         "--fix adds it to ~/.claude/settings.json, then restart Claude")
 
-    trouves = {nom: cli for nom, cands in EDITEURS.items() if (cli := trouver(cands))}
-    for nom, cli in trouves.items():
-        version = extension_installee(cli)
+    found = {name: cli for name, cands in EDITORS.items() if (cli := find(cands))}
+    for name, cli in found.items():
+        version = installed_version(cli)
         if version != VERSION and fix:
-            construire_vsix()
+            build_vsix()
             subprocess.run([cli, "--install-extension", str(VSIX), "--force"], check=True, capture_output=True)
-            version = extension_installee(cli)
-        ligne(version == VERSION, f"extension Cairn {VERSION} dans {nom}" + (f" (installée : {version})" if version and version != VERSION else ""),
-              "--fix l'installe (rechargez ensuite la fenêtre)")
-    if not trouves:
-        print("· aucun éditeur de la famille VS Code trouvé (VS Code, Cursor, Windsurf, VSCodium)")
+            version = installed_version(cli)
+        line(version == VERSION, f"Cairn {VERSION} extension in {name}" + (f" (installed: {version})" if version and version != VERSION else ""),
+             "--fix installs it (then reload the window)")
+    if not found:
+        print("· no VS Code family editor found (VS Code, Cursor, Windsurf, VSCodium)")
 
-    print(f"· autres éditeurs (JetBrains, Zed, Sublime…) : node \"{RACINE / 'web' / 'serve.js'}\" <dossier du projet> --open")
-    print(f"· Vim / Neovim : ajouter \"{RACINE / 'vim'}\" au runtimepath, puis :Cairn")
+    print(f"· other editors (JetBrains, Zed, Sublime…): node \"{ROOT / 'web' / 'serve.js'}\" <project folder> --open")
+    print(f"· Vim / Neovim: add \"{ROOT / 'vim'}\" to the runtimepath, then :Cairn")
 
     hud = CLAUDE_DIR / "plugins" / "claude-hud" / "config.json"
     try:
-        doublon = json.loads(hud.read_text(encoding="utf-8")).get("display", {}).get("showTodos") is True
+        duplicate = json.loads(hud.read_text(encoding="utf-8")).get("display", {}).get("showTodos") is True
     except (OSError, ValueError):
-        doublon = False
-    print("· claude-hud affiche aussi les tâches : `/hud` puis « masque la ligne des todos »" if doublon
-          else "✓ pas de doublon dans la ligne de statut")
+        duplicate = False
+    print("· claude-hud also shows the tasks: `/hud`, then ask it to hide the todos line" if duplicate
+          else "✓ no duplicate in the status line")
 
-    ancien = CLAUDE_DIR / "plugins" / "local" / "claude-roadmap"
-    if ancien.is_symlink():
-        print(f"· ancien lien {ancien} : à supprimer une fois les sessions Claude relancées")
+    old = CLAUDE_DIR / "plugins" / "local" / "claude-roadmap"
+    if old.is_symlink():
+        print(f"· old link {old}: remove it once your Claude sessions have been restarted")
     return 0 if ok else 1
 
 
 if __name__ == "__main__":
-    for flux in (sys.stdout, sys.stderr):
+    for stream in (sys.stdout, sys.stderr):
         try:
-            flux.reconfigure(encoding="utf-8", errors="replace")
+            stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
     sys.exit(main("--fix" in sys.argv))

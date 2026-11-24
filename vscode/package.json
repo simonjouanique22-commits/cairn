@@ -1,8 +1,8 @@
 {
   "name": "cairn",
-  "displayName": "Cairn — la roadmap de Claude Code",
-  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en planche vivante, les fichiers touchés par étape (avant/après), et « Claude t'attend ».",
-  "version": "1.2.0",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "1.3.0",
   "publisher": "local",
   "icon": "media/icon.png",
   "galleryBanner": { "color": "#F4F0E8", "theme": "light" },
@@ -20,18 +20,18 @@
       "cairn": [{ "id": "cairn.roadmap", "name": "Roadmap", "type": "webview" }]
     },
     "commands": [
-      { "command": "cairn.ouvrir", "title": "Ouvrir la roadmap", "category": "Cairn" },
-      { "command": "cairn.reglages", "title": "Réglages", "category": "Cairn" },
-      { "command": "cairn.rafraichir", "title": "Rafraîchir", "category": "Cairn" }
+      { "command": "cairn.open", "title": "%command.open%", "category": "Cairn" },
+      { "command": "cairn.settings", "title": "%command.settings%", "category": "Cairn" },
+      { "command": "cairn.refresh", "title": "%command.refresh%", "category": "Cairn" }
     ],
     "configuration": {
       "title": "Cairn",
       "properties": {
-        "cairn.accent": { "type": "string", "default": "#2B3BFF", "format": "color", "description": "Couleur de l'étape en cours (hexadécimal)." },
-        "cairn.pop": { "type": "string", "default": "#FF7AD9", "format": "color", "description": "Couleur des surlignages et autocollants (hexadécimal)." },
-        "cairn.staleHours": { "type": "number", "default": 2, "minimum": 0.1, "description": "Au-delà de ce nombre d'heures sans mise à jour, une roadmap est grisée comme ancienne." },
-        "cairn.notifications": { "type": "boolean", "default": true, "description": "Notification VS Code quand Claude attend une autorisation ou une réponse." },
-        "cairn.language": { "type": "string", "enum": ["auto", "fr", "en"], "default": "auto", "description": "Langue de la vue (auto : celle de VS Code)." }
+        "cairn.accent": { "type": "string", "default": "#2B3BFF", "format": "color", "description": "%config.accent%" },
+        "cairn.pop": { "type": "string", "default": "#FF7AD9", "format": "color", "description": "%config.pop%" },
+        "cairn.staleHours": { "type": "number", "default": 2, "minimum": 0.1, "description": "%config.staleHours%" },
+        "cairn.notifications": { "type": "boolean", "default": true, "description": "%config.notifications%" },
+        "cairn.language": { "type": "string", "enum": ["auto", "en", "fr"], "default": "auto", "description": "%config.language%" }
       }
     }
   }

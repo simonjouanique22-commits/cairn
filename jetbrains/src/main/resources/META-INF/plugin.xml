@@ -3,9 +3,9 @@
   <name>Cairn</name>
   <vendor>local</vendor>
   <description><![CDATA[
-    <p>La roadmap de Claude Code, pierre après pierre : la vue universelle de Cairn (web/serve.js) est lancée pour le
-    projet ouvert et affichée dans une fenêtre d'outils, avec l'avancement, l'étape en cours et « Claude t'attend ».</p>
-    <p>Lecture seule, accessible uniquement depuis ce poste. Nécessite Node.js et le plugin Cairn pour Claude Code.</p>
+    <p>Claude Code's roadmap, stone by stone: Cairn's universal view (web/serve.js) is started for the open project and
+    shown in a tool window, with progress, the step in progress and "Claude is waiting for you".</p>
+    <p>Read-only, reachable from this machine only. Requires Node.js and the Cairn plugin for Claude Code.</p>
   ]]></description>
   <depends>com.intellij.modules.platform</depends>
   <extensions defaultExtensionNs="com.intellij">

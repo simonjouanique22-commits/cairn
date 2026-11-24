@@ -1,10 +1,10 @@
 .DS_Store
 __pycache__/
-# lien de compatibilité pour les sessions lancées avant le renommage
+# compatibility link for sessions started before the rename
 hooks/roadmap.py
-# le paquet de l'extension est construit en local (setup.py) ou par la release GitHub
+# the extension package is built locally (setup.py) or by the GitHub release
 vscode/*.vsix
-# compilation du plugin JetBrains
+# JetBrains plugin build output
 jetbrains/build/
 jetbrains/.gradle/
 jetbrains/.kotlin/

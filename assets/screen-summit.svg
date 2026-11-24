@@ -16,7 +16,7 @@ box-shadow:5px 5px 0 var(--sheet-shadow);display:flex;flex-direction:column;gap:
 .sheet.stale{opacity:.72;filter:saturate(.35)}
 .top{display:flex;align-items:center;gap:8px}
 .word{font-weight:800;font-size:20px;letter-spacing:-.04em}
-.mini,.coeur{display:flex;flex-direction:column;align-items:center;gap:1.5px}
+.mini,.core{display:flex;flex-direction:column;align-items:center;gap:1.5px}
 .mini i{display:block;height:4px;border-radius:99px}.mini .p4{width:7px;border:1px dashed var(--ink);height:3.5px}
 .mini .p3{width:11px;background:var(--accent)}.mini .p2{width:15px;background:var(--pop)}.mini .p1{width:19px;background:var(--ink);height:4.5px}
 .chip{font-family:var(--mono);font-size:10.5px;font-weight:600;padding:0 8px;border:2px solid var(--ink);border-radius:99px;white-space:nowrap}
@@ -50,7 +50,7 @@ background:var(--pop);color:#121212}
 .files button{font-family:var(--mono);font-size:10px;font-weight:600;padding:0 7px;border:1.5px solid var(--ink);border-radius:99px;
 background:transparent;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .files button.cmd{border-style:dashed}
-.files button:hover,.files button.copie{background:var(--pop);color:#121212;border-color:#121212}
+.files button:hover,.files button.copied{background:var(--pop);color:#121212;border-color:#121212}
 .card .files button{border-color:#fff;color:#fff}.files span{font-family:var(--mono);font-size:10px;color:var(--muted)}
 summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}
 summary::after{content:" ▾";font-size:10px;opacity:.6}details[open] summary::after{content:" ▴"}
@@ -60,8 +60,8 @@ details p{margin:4px 0 0;font-size:12px;font-weight:500;color:var(--muted);text-
 .summit{align-self:center;margin:4px 0 0;padding:4px 18px;background:var(--pop);color:#121212;border:2.5px solid var(--ink);
 border-radius:99px;box-shadow:4px 4px 0 var(--card-shadow);transform:rotate(-4deg);font-weight:800;font-size:24px;letter-spacing:-.03em}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chips .fin{background:var(--accent);color:#fff}
-.pile{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:8px}
-.pile b{display:block;border:2px solid var(--ink);border-radius:99px;font-weight:800;line-height:1.1}
+.stack{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:8px}
+.stack b{display:block;border:2px solid var(--ink);border-radius:99px;font-weight:800;line-height:1.1}
 .l-c{padding:0 9px;font-size:16px;background:var(--pop);color:#121212;transform:rotate(-6deg)}
 .l-a{padding:0 12px;font-size:20px;background:var(--accent);color:#fff;transform:rotate(4deg)}
 .l-i{padding:0 18px;font-size:23px;background:var(--paper);transform:rotate(-3deg)}
@@ -69,34 +69,34 @@ border-radius:99px;box-shadow:4px 4px 0 var(--card-shadow);transform:rotate(-4de
 .l-n{padding:0 32px;font-size:32px;background:var(--ink);color:var(--paper);transform:rotate(-2deg)}
 .empty{align-items:center;text-align:center;padding:26px 16px}
 .empty h2{margin:6px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em}.empty p{margin:0;font-family:var(--mono);font-size:11px;color:var(--muted)}
-.tampon{position:relative;width:190px;height:190px;border-radius:50%;background:var(--pop);border:2.5px solid var(--ink);
+.stamp{position:relative;width:190px;height:190px;border-radius:50%;background:var(--pop);border:2.5px solid var(--ink);
 box-shadow:5px 5px 0 var(--card-shadow);transform:rotate(-10deg);display:flex;align-items:center;justify-content:center}
-.tampon svg{position:absolute;inset:0;width:100%;height:100%}
-.tampon text{font-family:var(--mono);font-size:12.5px;font-weight:700;fill:#121212}
-.coeur{width:104px;height:104px;border-radius:50%;background:#FFFDF8;border:2.5px solid #121212;justify-content:center;gap:3px}
-.coeur i{display:block;height:11px;border:2px solid #121212;border-radius:99px}.coeur .p4{width:20px;border-style:dashed}
-.coeur .p3{width:32px;background:var(--accent)}.coeur .p2{width:46px;background:var(--pop)}.coeur .p1{width:60px;background:#121212}
-.sig{align-self:flex-start;display:flex;align-items:center;gap:9px;padding:7px 13px;border:2.5px solid var(--ink);border-radius:14px;
+.stamp svg{position:absolute;inset:0;width:100%;height:100%}
+.stamp text{font-family:var(--mono);font-size:12.5px;font-weight:700;fill:#121212}
+.core{width:104px;height:104px;border-radius:50%;background:#FFFDF8;border:2.5px solid #121212;justify-content:center;gap:3px}
+.core i{display:block;height:11px;border:2px solid #121212;border-radius:99px}.core .p4{width:20px;border-style:dashed}
+.core .p3{width:32px;background:var(--accent)}.core .p2{width:46px;background:var(--pop)}.core .p1{width:60px;background:#121212}
+.signal{align-self:flex-start;display:flex;align-items:center;gap:9px;padding:7px 13px;border:2.5px solid var(--ink);border-radius:14px;
 background:var(--pop);color:#121212;box-shadow:3px 3px 0 var(--card-shadow);transform:rotate(-1.5deg);font-weight:800;font-size:14px}
-.sig::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:#121212;animation:clignote 1s steps(2) infinite}
-.sig small{display:block;font-family:var(--mono);font-weight:600;font-size:10.5px}
-.sig.fini{background:var(--accent);color:#fff}.sig.fini::before{display:none}
+.signal::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:#121212;animation:blink 1s steps(2) infinite}
+.signal small{display:block;font-family:var(--mono);font-weight:600;font-size:10.5px}
+.signal.done{background:var(--accent);color:#fff}.signal.done::before{display:none}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
 .pill{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 9px;border:2px solid var(--ink);border-radius:99px;background:transparent}
 .pill.on{background:var(--ink);color:var(--paper)}
-.journal summary{font-family:var(--mono);font-size:11px;font-weight:700}
-.journal ul{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
-.journal button{width:100%;text-align:left;display:flex;gap:8px;align-items:center;font-size:12.5px;padding:6px 10px;
+.log summary{font-family:var(--mono);font-size:11px;font-weight:700}
+.log ul{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
+.log button{width:100%;text-align:left;display:flex;gap:8px;align-items:center;font-size:12.5px;padding:6px 10px;
 border:2px solid var(--ink);border-radius:12px;background:var(--paper)}
-.journal button b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.journal button span{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.log button b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.log button span{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
 @keyframes pop{from{opacity:0;transform:rotate(-6deg) scale(.85)}}
-@keyframes tampon{from{opacity:0;transform:rotate(-14deg) scale(1.6)}}
-@keyframes glisse{from{opacity:0;transform:translateX(-8px)}}
-@keyframes clignote{50%{opacity:.15}}
-.card.in,.sig.in,.sheet.in{animation:pop .45s cubic-bezier(.2,1.5,.4,1)}
-.summit.in{animation:tampon .5s cubic-bezier(.2,1.6,.4,1)}
-.row.in,.files.in{animation:glisse .35s ease-out}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style><div id="app"><main class="sheet" data-k="sheet-demo"><header class="top" data-k="top"><span class="mini" aria-hidden="true" data-k="mini"><i class="p4"></i><i class="p3"></i><i class="p2"></i><i class="p1"></i></span><span class="word" data-k="w">cairn</span><span class="chip proj" title="/demo/mon-projet" data-k="proj">mon-projet</span></header><div class="summit" data-k="summit">Sommet atteint ✓</div>
-<div class="bar" data-k="bar" style="grid-template-columns:repeat(5,minmax(0,1fr))"><i class="d" data-k="b1"></i><i class="d" data-k="b2"></i><i class="d" data-k="b3"></i><i class="d" data-k="b4"></i><i class="d" data-k="b5"></i></div><div class="chips" data-k="chips"><span class="chip">5 étapes</span><span class="chip fin">fini à 14:29</span></div>
-<ol class="steps" data-k="steps"><li class="done" data-k="s1"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><details class="t" data-k="t"><summary title="Lire le code existant">Lire le code existant</summary><p>Repérer les écrans et services concernés.</p></details><time data-k="time">14:05</time></div></li><li class="done" data-k="s2"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Concevoir le modèle de données">Concevoir le modèle de données</span><time data-k="time">14:11</time></div><div class="files" data-k="f"><button data-open="/demo/src/modele.ts" data-step="2" title="/demo/src/modele.ts">modele.ts</button></div></li><li class="done" data-k="s3"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Implémenter l’écran de réglage">Implémenter l’écran de réglage</span><time data-k="time">14:17</time></div><div class="files" data-k="f"><button data-open="/demo/src/Reglage.tsx" data-step="3" title="/demo/src/Reglage.tsx">Reglage.tsx</button><button data-open="/demo/src/api.ts" data-step="3" title="/demo/src/api.ts">api.ts</button></div></li><li class="done" data-k="s4"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Écrire les tests">Écrire les tests</span><time data-k="time">14:23</time></div></li><li class="done" data-k="s5"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Relecture et documentation">Relecture et documentation</span><time data-k="time">14:29</time></div></li></ol><div class="pile" aria-hidden="true" data-k="pile"><b class="l-c">c</b><b class="l-a">a</b><b class="l-i">i</b><b class="l-r">r</b><b class="l-n">n</b></div><span class="foot" data-k="foot" style="align-self:center">le cairn est complet.</span></main></div></div></foreignObject></svg>
+@keyframes stamp{from{opacity:0;transform:rotate(-14deg) scale(1.6)}}
+@keyframes slide{from{opacity:0;transform:translateX(-8px)}}
+@keyframes blink{50%{opacity:.15}}
+.card.in,.signal.in,.sheet.in{animation:pop .45s cubic-bezier(.2,1.5,.4,1)}
+.summit.in{animation:stamp .5s cubic-bezier(.2,1.6,.4,1)}
+.row.in,.files.in{animation:slide .35s ease-out}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style><div id="app"><main class="sheet" data-k="sheet-demo"><header class="top" data-k="top"><span class="mini" aria-hidden="true" data-k="mini"><i class="p4"></i><i class="p3"></i><i class="p2"></i><i class="p1"></i></span><span class="word" data-k="w">cairn</span><span class="chip proj" title="/demo/my-project" data-k="proj">my-project</span></header><div class="summit" data-k="summit">Summit reached ✓</div>
+<div class="bar" data-k="bar" style="grid-template-columns:repeat(5,minmax(0,1fr))"><i class="d" data-k="b1"></i><i class="d" data-k="b2"></i><i class="d" data-k="b3"></i><i class="d" data-k="b4"></i><i class="d" data-k="b5"></i></div><div class="chips" data-k="chips"><span class="chip">5 steps</span><span class="chip fin">done at 14:29</span></div>
+<ol class="steps" data-k="steps"><li class="done" data-k="s1"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><details class="t" data-k="t"><summary title="Read the existing code">Read the existing code</summary><p>Find the screens and services involved.</p></details><time data-k="time">14:05</time></div></li><li class="done" data-k="s2"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Design the data model">Design the data model</span><time data-k="time">14:11</time></div><div class="files" data-k="f"><button data-open="/demo/src/model.ts" data-step="2" title="/demo/src/model.ts">model.ts</button></div></li><li class="done" data-k="s3"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Build the settings screen">Build the settings screen</span><time data-k="time">14:17</time></div><div class="files" data-k="f"><button data-open="/demo/src/Settings.tsx" data-step="3" title="/demo/src/Settings.tsx">Settings.tsx</button><button data-open="/demo/src/api.ts" data-step="3" title="/demo/src/api.ts">api.ts</button></div></li><li class="done" data-k="s4"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Write the tests">Write the tests</span><time data-k="time">14:23</time></div></li><li class="done" data-k="s5"><div class="row" data-k="row"><span class="box" data-k="box">✓</span><span class="t" data-k="t" title="Review and docs">Review and docs</span><time data-k="time">14:29</time></div></li></ol><div class="stack" aria-hidden="true" data-k="stack"><b class="l-c">c</b><b class="l-a">a</b><b class="l-i">i</b><b class="l-r">r</b><b class="l-n">n</b></div><span class="foot" data-k="foot" style="align-self:center">the cairn is complete.</span></main></div></div></foreignObject></svg>
