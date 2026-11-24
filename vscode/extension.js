@@ -37,7 +37,8 @@ function sessionCwd(sid, claudeDir) {
   fs.closeSync(fd);
   const m = buf.toString('utf8', 0, n).match(/"cwd":("(?:[^"\\]|\\.)*")/);
   if (!m) return null; // transcript pas encore écrit : on réessaiera
-  const cwd = JSON.parse(m[1]);
+  let cwd = JSON.parse(m[1]);
+  try { cwd = fs.realpathSync.native(cwd); } catch { /* dossier disparu : chemin tel quel */ } // liens, noms courts Windows
   cwdCache.set(sid, cwd);
   return cwd;
 }
