@@ -86,8 +86,11 @@ function loadSessions(folders, claudeDir = CLAUDE_DIR, max = 9) {
 }
 const loadRoadmap = (folders, claudeDir = CLAUDE_DIR) => loadSessions(folders, claudeDir, 1)[0] ?? null;
 
+// Clé de comparaison d'un chemin : séparateurs normalisés, et casse ignorée sous Windows.
+const cle = (p) => (process.platform === 'win32' ? path.normalize(p).toLowerCase() : path.normalize(p));
+
 const traces = new Map();
-const traceVide = () => ({ offset: 0, cur: null, reste: Buffer.alloc(0), files: {}, debut: {}, fin: {}, sauvegardes: {} });
+const traceVide =() => ({ offset: 0, cur: null, reste: Buffer.alloc(0), files: {}, debut: {}, fin: {}, sauvegardes: {} });
 // Ce que le transcript dit des étapes, lu au fil de l'eau : début et fin de chaque étape (TaskUpdate), chemins des
 // fichiers écrits pendant qu'elle était en cours (Write/Edit/MultiEdit/NotebookEdit) et copies de sauvegarde que
 // Claude Code fait avant de modifier un fichier (file-history-snapshot). Jamais le contenu des messages.
@@ -113,11 +116,11 @@ function traceOf(sid, claudeDir = CLAUDE_DIR) {
       let msg;
       try { msg = JSON.parse(ligne); } catch { continue; }
       if (instantane) {
-        for (const [cle, b] of Object.entries(msg.snapshot?.trackedFileBackups || {})) {
+        for (const [nomFichier, b] of Object.entries(msg.snapshot?.trackedFileBackups || {})) {
           const t = Date.parse(b?.backupTime);
           if (!t) continue;
-          const abs = b.realParentDir ? path.join(b.realParentDir, path.basename(cle)) : cle;
-          const liste = (tr.sauvegardes[abs] ||= []);
+          const abs = b.realParentDir ? path.join(b.realParentDir, path.basename(nomFichier)) : nomFichier;
+          const liste = (tr.sauvegardes[cle(abs)] ||= []);
           if (!liste.some((x) => x.t === t)) liste.push({ t, nom: b.backupFileName ?? null });
         }
         continue;
@@ -131,7 +134,7 @@ function traceOf(sid, claudeDir = CLAUDE_DIR) {
           if (b.input?.status === 'completed') tr.fin[id] = quand;
         } else if (tr.cur && /^(Write|Edit|MultiEdit|NotebookEdit)$/.test(b.name)) {
           const p = b.input?.file_path || b.input?.notebook_path;
-          if (typeof p === 'string') (tr.files[tr.cur] ||= new Set()).add(p);
+          if (typeof p === 'string') (tr.files[tr.cur] ||= new Set()).add(path.normalize(p));
         }
       }
     }
@@ -144,7 +147,7 @@ const filesByStep = (sid, claudeDir = CLAUDE_DIR) => traceOf(sid, claudeDir).fil
 // Copie prise par Claude Code juste avant sa première modification du fichier depuis `depuis`
 // ({ nom: null } : le fichier n'existait pas ; undefined : aucune copie connue).
 function sauvegardeAvant(tr, file, depuis) {
-  return (tr.sauvegardes[file] || []).filter((x) => x.t >= depuis - 1000).sort((a, b) => a.t - b.t)[0];
+  return (tr.sauvegardes[cle(file)] || []).filter((x) => x.t >= depuis - 1000).sort((a, b) => a.t - b.t)[0];
 }
 
 // Fichiers modifiés pendant une étape sans écriture directe de Claude (commande, script, à la main) : ceux que git
@@ -155,8 +158,9 @@ function filesParCommande(tasks, tr, changes, now = Date.now()) {
     const debut = tr.debut[task.id];
     if (!debut) continue;
     const fin = task.status === 'completed' ? (tr.fin[task.id] || task.mtime || now) : now;
+    const directs = new Set([...(tr.files[task.id] || [])].map(cle));
     for (const f of changes) {
-      if (tr.files[task.id]?.has(f)) continue;
+      if (directs.has(cle(f))) continue;
       const m = mtimeOf(f);
       if (m >= debut && m <= fin + 2000) (out[task.id] ||= new Set()).add(f);
     }

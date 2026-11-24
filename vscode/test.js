@@ -47,11 +47,11 @@ fs.appendFileSync(transcript('aaa'), [outil('TaskUpdate', { taskId: '1', status:
 const moitie = outil('Edit', { file_path: '/p/écran.js' });
 fs.appendFileSync(transcript('aaa'), moitie.slice(0, 40));
 let f = filesByStep('aaa', home);
-assert.deepStrictEqual([...f['1']], ['/p/a.js', '/p/b.js']);
+assert.deepStrictEqual([...f['1']], ['/p/a.js', '/p/b.js'].map(path.normalize));
 assert.strictEqual(f['2'], undefined);
 fs.appendFileSync(transcript('aaa'), moitie.slice(40) + '\n');
 f = filesByStep('aaa', home);
-assert.deepStrictEqual([...f['2']], ['/p/écran.js']);
+assert.deepStrictEqual([...f['2']], ['/p/écran.js'].map(path.normalize));
 
 // signal « Claude t'attend » : affiché tant que le transcript n'a pas bougé depuis
 const etat = path.join(home, 'cairn', 'etat');
