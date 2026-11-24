@@ -1,0 +1,24 @@
+# À chaque tag vX.Y.Z : tests, construction de l'extension VS Code, release GitHub avec le .vsix.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  vsix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        run: python3 check.py && node vscode/test.js
+      - name: Paquet de l'extension
+        working-directory: vscode
+        run: npx --yes @vscode/vsce@3 package --no-dependencies --allow-missing-repository --skip-license -o "cairn-${GITHUB_REF_NAME}.vsix"
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" vscode/cairn-*.vsix --title "Cairn $GITHUB_REF_NAME" --notes-file CHANGELOG.md
