@@ -176,3 +176,10 @@ Releasing: update `CHANGELOG.md` and the version numbers, then push a `vX.Y.Z` t
   <img src="assets/logo.svg" width="150" alt="Cairn stamp: Claude Code's plan, stone by stone"><br>
   <sub>Code written with the help of Claude (AI).</sub>
 </p>
+
+<br>
+
+<p align="center">
+  <sub>made by</sub><br>
+  <img src="assets/jouanique-industries.webp" width="280" alt="Jouanique Industries — creator's stamp">
+</p>

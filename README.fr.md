@@ -175,3 +175,10 @@ Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, 
   <img src="assets/logo.svg" width="150" alt="Tampon Cairn : le plan de Claude, pierre après pierre"><br>
   <sub>Code écrit avec l’assistance de Claude (IA).</sub>
 </p>
+
+<br>
+
+<p align="center">
+  <sub>une création</sub><br>
+  <img src="assets/jouanique-industries.webp" width="280" alt="Jouanique Industries — tampon du créateur">
+</p>
