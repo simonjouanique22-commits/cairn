@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="96" viewBox="0 0 920 96" role="img" aria-label="zéro appel réseau · aucune dépendance · clair et sombre automatiques · fait avec Claude">
+  <defs><style>.m{font-family:'JetBrains Mono',SFMono-Regular,Menlo,Consolas,monospace;font-weight:700}</style></defs>
+  <g transform="rotate(-3 122 47)">
+    <rect x="17" y="27" width="220" height="50" rx="25" fill="#121212"/>
+    <rect x="12" y="22" width="220" height="50" rx="25" fill="#FF7AD9" stroke="#121212" stroke-width="3"/>
+    <text class="m" x="122" y="47" dy=".35em" text-anchor="middle" font-size="17" textLength="172" lengthAdjust="spacingAndGlyphs" fill="#121212">zéro appel réseau</text>
+  </g>
+  <g transform="rotate(2 351 47)">
+    <rect x="251" y="27" width="210" height="50" rx="25" fill="#121212"/>
+    <rect x="246" y="22" width="210" height="50" rx="25" fill="#FFFDF8" stroke="#121212" stroke-width="3"/>
+    <text class="m" x="351" y="47" dy=".35em" text-anchor="middle" font-size="17" textLength="162" lengthAdjust="spacingAndGlyphs" fill="#121212">aucune dépendance</text>
+  </g>
+  <g transform="rotate(-2 580 47)">
+    <rect x="475" y="27" width="220" height="50" rx="25" fill="#121212"/>
+    <rect x="470" y="22" width="220" height="50" rx="25" fill="#2B3BFF" stroke="#121212" stroke-width="3"/>
+    <text class="m" x="580" y="47" dy=".35em" text-anchor="middle" font-size="17" textLength="172" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">clair · sombre auto</text>
+  </g>
+  <g transform="rotate(3 804 47)">
+    <rect x="709" y="27" width="190" height="50" rx="25" fill="#121212"/>
+    <rect x="704" y="22" width="190" height="50" rx="25" fill="#F4F0E8" stroke="#121212" stroke-width="3"/>
+    <text class="m" x="799" y="47" dy=".35em" text-anchor="middle" font-size="17" textLength="150" lengthAdjust="spacingAndGlyphs" fill="#121212">fait avec Claude</text>
+  </g>
+</svg>

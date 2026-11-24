@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" role="img" aria-label="cairn — le plan de Claude, pierre après pierre">
+  <defs>
+    <style>
+      .b{font-family:'Bricolage Grotesque','Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:800}
+      .s{font-family:'Bricolage Grotesque','Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:600}
+      .m{font-family:'JetBrains Mono',SFMono-Regular,Menlo,Consolas,monospace;font-weight:700}
+    </style>
+    <path id="rondHero" d="M1150,470 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/>
+  </defs>
+
+  <!-- la planche -->
+  <rect x="18" y="18" width="1248" height="528" rx="40" fill="#121212"/>
+  <rect x="8" y="8" width="1248" height="528" rx="40" fill="#F4F0E8" stroke="#121212" stroke-width="5"/>
+
+  <!-- la pile de lettres -->
+  <rect x="175" y="62" width="70" height="54" rx="27" fill="none" stroke="#121212" stroke-width="5" stroke-dasharray="10 8" transform="rotate(-6 210 89)"/>
+  <text class="b" x="210" y="89" dy=".35em" text-anchor="middle" font-size="42" fill="#121212" transform="rotate(-6 210 89)">c</text>
+  <g transform="rotate(4 210 160)">
+    <rect x="166" y="134" width="100" height="64" rx="32" fill="#121212"/>
+    <rect x="160" y="128" width="100" height="64" rx="32" fill="#2B3BFF" stroke="#121212" stroke-width="5"/>
+    <text class="b" x="210" y="160" dy=".35em" text-anchor="middle" font-size="50" fill="#FFFFFF">a</text>
+  </g>
+  <g transform="rotate(-3 210 240)">
+    <rect x="151" y="210" width="130" height="72" rx="36" fill="#121212"/>
+    <rect x="145" y="204" width="130" height="72" rx="36" fill="#FFFDF8" stroke="#121212" stroke-width="5"/>
+    <text class="b" x="210" y="240" dy=".35em" text-anchor="middle" font-size="58" fill="#121212">i</text>
+  </g>
+  <g transform="rotate(5 210 326)">
+    <rect x="131" y="290" width="170" height="84" rx="42" fill="#121212"/>
+    <rect x="125" y="284" width="170" height="84" rx="42" fill="#FF7AD9" stroke="#121212" stroke-width="5"/>
+    <text class="b" x="210" y="326" dy=".35em" text-anchor="middle" font-size="66" fill="#121212">r</text>
+  </g>
+  <g transform="rotate(-2 210 426)">
+    <rect x="106" y="384" width="220" height="96" rx="48" fill="#121212"/>
+    <rect x="100" y="378" width="220" height="96" rx="48" fill="#121212" stroke="#121212" stroke-width="5"/>
+    <text class="b" x="210" y="426" dy=".35em" text-anchor="middle" font-size="76" fill="#F4F0E8">n</text>
+  </g>
+
+  <!-- le nom et la promesse -->
+  <text class="b" x="380" y="300" font-size="210" textLength="480" lengthAdjust="spacingAndGlyphs" fill="#121212">cairn</text>
+  <text class="m" x="384" y="370" font-size="27" textLength="320" lengthAdjust="spacingAndGlyphs" fill="#121212">le plan de Claude,</text>
+  <rect x="376" y="386" width="392" height="46" rx="8" fill="#FF7AD9"/>
+  <text class="m" x="388" y="420" font-size="27" textLength="368" lengthAdjust="spacingAndGlyphs" fill="#121212">pierre après pierre.</text>
+  <g transform="rotate(-2 495 482)">
+    <rect x="384" y="464" width="222" height="40" rx="20" fill="#2B3BFF" stroke="#121212" stroke-width="3.5"/>
+    <text class="m" x="495" y="484" dy=".35em" text-anchor="middle" font-size="15" textLength="180" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">pour Claude Code</text>
+  </g>
+  <g transform="rotate(2 724 482)">
+    <rect x="624" y="464" width="200" height="40" rx="20" fill="#FFFDF8" stroke="#121212" stroke-width="3.5"/>
+    <text class="m" x="724" y="484" dy=".35em" text-anchor="middle" font-size="15" textLength="150" lengthAdjust="spacingAndGlyphs" fill="#121212">dans VS Code</text>
+  </g>
+
+  <!-- la mini roadmap -->
+  <g transform="rotate(3 1040 260)">
+    <rect x="908" y="58" width="300" height="400" rx="24" fill="#121212"/>
+    <rect x="900" y="50" width="300" height="400" rx="24" fill="#FFFDF8" stroke="#121212" stroke-width="4"/>
+    <rect x="932" y="72" width="10" height="5" rx="2.5" fill="none" stroke="#121212" stroke-width="1.5" stroke-dasharray="2 1.5"/>
+    <rect x="929" y="79" width="16" height="5" rx="2.5" fill="#2B3BFF"/>
+    <rect x="926" y="86" width="22" height="5" rx="2.5" fill="#FF7AD9"/>
+    <rect x="923" y="93" width="28" height="6" rx="3" fill="#121212"/>
+    <text class="b" x="958" y="96" font-size="25" textLength="60" lengthAdjust="spacingAndGlyphs" fill="#121212">cairn</text>
+    <rect x="1084" y="76" width="92" height="24" rx="12" fill="none" stroke="#121212" stroke-width="2.5"/>
+    <text class="m" x="1130" y="88" dy=".35em" text-anchor="middle" font-size="11.5" textLength="72" lengthAdjust="spacingAndGlyphs" fill="#121212">mon-projet</text>
+    <text class="b" x="922" y="184" font-size="88" textLength="46" lengthAdjust="spacingAndGlyphs" fill="#121212">2</text>
+    <text class="b" x="972" y="184" font-size="40" textLength="40" lengthAdjust="spacingAndGlyphs" fill="#8A857B">/5</text>
+    <text class="m" x="1176" y="180" text-anchor="end" font-size="12.5" textLength="104" lengthAdjust="spacingAndGlyphs" fill="#5E5A52">étapes · 40 %</text>
+    <rect x="924" y="200" width="45" height="16" rx="8" fill="#121212" stroke="#121212" stroke-width="3"/>
+    <rect x="975" y="200" width="45" height="16" rx="8" fill="#121212" stroke="#121212" stroke-width="3"/>
+    <rect x="1026" y="200" width="45" height="16" rx="8" fill="#2B3BFF" stroke="#121212" stroke-width="3"/>
+    <rect x="1077" y="200" width="45" height="16" rx="8" fill="none" stroke="#121212" stroke-width="3"/>
+    <rect x="1128" y="200" width="45" height="16" rx="8" fill="none" stroke="#121212" stroke-width="3"/>
+    <rect x="924" y="240" width="24" height="24" rx="7" fill="#121212"/>
+    <text class="b" x="936" y="252" dy=".35em" text-anchor="middle" font-size="15" fill="#FFFDF8">✓</text>
+    <text class="s" x="958" y="258" font-size="16" textLength="160" lengthAdjust="spacingAndGlyphs" fill="#5E5A52">Lire le code existant</text>
+    <rect x="956" y="251" width="166" height="5" rx="2" fill="#FF7AD9"/>
+    <text class="m" x="1176" y="257" text-anchor="end" font-size="12" fill="#5E5A52">14:05</text>
+    <rect x="924" y="274" width="24" height="24" rx="7" fill="#121212"/>
+    <text class="b" x="936" y="286" dy=".35em" text-anchor="middle" font-size="15" fill="#FFFDF8">✓</text>
+    <text class="s" x="958" y="292" font-size="16" textLength="150" lengthAdjust="spacingAndGlyphs" fill="#5E5A52">Concevoir le modèle</text>
+    <rect x="956" y="285" width="156" height="5" rx="2" fill="#FF7AD9"/>
+    <text class="m" x="1176" y="291" text-anchor="end" font-size="12" fill="#5E5A52">14:14</text>
+    <g transform="rotate(-2 1046 353)">
+      <rect x="925" y="315" width="252" height="86" rx="16" fill="#121212"/>
+      <rect x="920" y="310" width="252" height="86" rx="16" fill="#2B3BFF" stroke="#121212" stroke-width="3"/>
+      <rect x="934" y="322" width="86" height="22" rx="11" fill="#FF7AD9" stroke="#121212" stroke-width="2.5"/>
+      <text class="m" x="977" y="333" dy=".35em" text-anchor="middle" font-size="11" textLength="62" lengthAdjust="spacingAndGlyphs" fill="#121212">EN COURS</text>
+      <text class="m" x="1158" y="333" dy=".35em" text-anchor="end" font-size="11" textLength="86" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">depuis 14:17</text>
+      <text class="b" x="934" y="371" font-size="21" textLength="196" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">Écran de réglage</text>
+      <text class="s" x="934" y="389" font-size="13" textLength="150" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">Implémentation de l’écran…</text>
+    </g>
+    <rect x="924" y="414" width="24" height="24" rx="7" fill="none" stroke="#121212" stroke-width="2.5" stroke-dasharray="5 3"/>
+    <text class="m" x="936" y="426" dy=".35em" text-anchor="middle" font-size="12" fill="#121212">4</text>
+    <text class="s" x="958" y="432" font-size="16" textLength="120" lengthAdjust="spacingAndGlyphs" fill="#121212">Écrire les tests</text>
+    <rect x="1100" y="415" width="76" height="22" rx="11" fill="none" stroke="#121212" stroke-width="2.5"/>
+    <text class="m" x="1138" y="426" dy=".35em" text-anchor="middle" font-size="11" textLength="56" lengthAdjust="spacingAndGlyphs" fill="#121212">après #3</text>
+  </g>
+
+  <!-- le tampon -->
+  <g transform="rotate(-12 1150 470)">
+    <circle cx="1156" cy="476" r="60" fill="#121212"/>
+    <circle cx="1150" cy="470" r="60" fill="#FF7AD9" stroke="#121212" stroke-width="4"/>
+    <text class="m" font-size="10" fill="#121212"><textPath href="#rondHero" textLength="284" lengthAdjust="spacing">CAIRN · PIERRE APRÈS PIERRE · LE PLAN ·</textPath></text>
+    <circle cx="1150" cy="470" r="32" fill="#FFFDF8" stroke="#121212" stroke-width="3"/>
+    <rect x="1144" y="452" width="12" height="6" rx="3" fill="none" stroke="#121212" stroke-width="1.5" stroke-dasharray="2 1.5"/>
+    <rect x="1140" y="461" width="20" height="7" rx="3.5" fill="#2B3BFF"/>
+    <rect x="1136" y="471" width="28" height="7" rx="3.5" fill="#FF7AD9" stroke="#121212" stroke-width="1"/>
+    <rect x="1132" y="481" width="36" height="8" rx="4" fill="#121212"/>
+  </g>
+</svg>

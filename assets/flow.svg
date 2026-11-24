@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="320" viewBox="0 0 1000 320" role="img" aria-label="1. Claude Code découpe la demande en étapes. 2. Le plugin Cairn l'oblige à poser sa roadmap et la suit. 3. L'extension VS Code affiche la roadmap et l'avancement en direct.">
+  <defs>
+    <style>
+      .b{font-family:'Bricolage Grotesque','Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:800}
+      .m{font-family:'JetBrains Mono',SFMono-Regular,Menlo,Consolas,monospace;font-weight:600}
+    </style>
+  </defs>
+
+  <g transform="rotate(-2 160 160)">
+    <rect x="27" y="67" width="280" height="200" rx="26" fill="#121212"/>
+    <rect x="20" y="60" width="280" height="200" rx="26" fill="#F4F0E8" stroke="#121212" stroke-width="4"/>
+    <text class="b" x="44" y="140" font-size="30" textLength="190" lengthAdjust="spacingAndGlyphs" fill="#121212">Claude Code</text>
+    <text class="m" x="44" y="182" font-size="14" fill="#121212">découpe la demande</text>
+    <text class="m" x="44" y="206" font-size="14" fill="#121212">en étapes (TaskCreate)</text>
+    <circle cx="46" cy="64" r="24" fill="#121212" stroke="#F4F0E8" stroke-width="3"/>
+    <text class="b" x="46" y="64" dy=".35em" text-anchor="middle" font-size="24" fill="#F4F0E8">1</text>
+  </g>
+
+  <polygon points="306,148 330,148 330,134 356,160 330,186 330,172 306,172" fill="#FFFDF8" stroke="#121212" stroke-width="3" stroke-linejoin="round"/>
+
+  <g transform="rotate(1.5 500 160)">
+    <rect x="367" y="67" width="280" height="200" rx="26" fill="#121212"/>
+    <rect x="360" y="60" width="280" height="200" rx="26" fill="#FF7AD9" stroke="#121212" stroke-width="4"/>
+    <text class="b" x="384" y="140" font-size="30" textLength="214" lengthAdjust="spacingAndGlyphs" fill="#121212">Cairn · plugin</text>
+    <text class="m" x="384" y="182" font-size="14" fill="#121212">l’oblige à poser sa</text>
+    <text class="m" x="384" y="206" font-size="14" fill="#121212">roadmap, puis la suit</text>
+    <circle cx="386" cy="64" r="24" fill="#121212" stroke="#F4F0E8" stroke-width="3"/>
+    <text class="b" x="386" y="64" dy=".35em" text-anchor="middle" font-size="24" fill="#F4F0E8">2</text>
+  </g>
+
+  <polygon points="646,148 670,148 670,134 696,160 670,186 670,172 646,172" fill="#FFFDF8" stroke="#121212" stroke-width="3" stroke-linejoin="round"/>
+
+  <g transform="rotate(-1.5 840 160)">
+    <rect x="707" y="67" width="280" height="200" rx="26" fill="#121212"/>
+    <rect x="700" y="60" width="280" height="200" rx="26" fill="#2B3BFF" stroke="#121212" stroke-width="4"/>
+    <text class="b" x="724" y="140" font-size="30" textLength="230" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">Cairn · VS Code</text>
+    <text class="m" x="724" y="182" font-size="14" fill="#FFFFFF">affiche la roadmap</text>
+    <text class="m" x="724" y="206" font-size="14" fill="#FFFFFF">et l’avancement, en direct</text>
+    <circle cx="726" cy="64" r="24" fill="#121212" stroke="#F4F0E8" stroke-width="3"/>
+    <text class="b" x="726" y="64" dy=".35em" text-anchor="middle" font-size="24" fill="#F4F0E8">3</text>
+  </g>
+</svg>
