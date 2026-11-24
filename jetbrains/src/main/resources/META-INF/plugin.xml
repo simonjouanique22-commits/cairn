@@ -1,0 +1,14 @@
+<idea-plugin>
+  <id>local.cairn</id>
+  <name>Cairn</name>
+  <vendor>local</vendor>
+  <description><![CDATA[
+    <p>La roadmap de Claude Code, pierre après pierre : la vue universelle de Cairn (web/serve.js) est lancée pour le
+    projet ouvert et affichée dans une fenêtre d'outils, avec l'avancement, l'étape en cours et « Claude t'attend ».</p>
+    <p>Lecture seule, accessible uniquement depuis ce poste. Nécessite Node.js et le plugin Cairn pour Claude Code.</p>
+  ]]></description>
+  <depends>com.intellij.modules.platform</depends>
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow id="Cairn" anchor="right" icon="/icons/cairn.svg" factoryClass="local.cairn.CairnToolWindowFactory"/>
+  </extensions>
+</idea-plugin>

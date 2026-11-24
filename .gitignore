@@ -4,3 +4,7 @@ __pycache__/
 hooks/roadmap.py
 # le paquet de l'extension est construit en local (setup.py) ou par la release GitHub
 vscode/*.vsix
+# compilation du plugin JetBrains
+jetbrains/build/
+jetbrains/.gradle/
+jetbrains/.kotlin/

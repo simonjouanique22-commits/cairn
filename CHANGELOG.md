@@ -1,5 +1,26 @@
 # Journal des versions
 
+## 1.2.0
+
+- **Avant / après** : un clic sur un fichier ouvre la comparaison « avant l'étape ↔ maintenant », à partir de la copie
+  que Claude Code garde avant de modifier un fichier (en lecture seule) ; sinon la comparaison avec git.
+- **Fichiers modifiés par commande** (`sed -i`, scripts, génération…) : repérés via git et la fenêtre de temps de
+  l'étape, affichés en pointillés à côté des écritures directes de Claude.
+- **`/cairn:pause`** et **`/cairn:reprise`** : couper puis rétablir le blocage pour la session en cours.
+- **Palette de VS Code** : « Cairn : Ouvrir la roadmap », « Cairn : Réglages », « Cairn : Rafraîchir ».
+- **Accessibilité** : l'avancement et « Claude t'attend » sont annoncés aux lecteurs d'écran ; focus visible au clavier ;
+  contrastes des couleurs vérifiés automatiquement (clair et sombre).
+- **Sobriété** : relecture toutes les 15 s au lieu de 2 s quand VS Code est en arrière-plan ou la vue cachée.
+- **Autres éditeurs** :
+  - forks de VS Code (Cursor, Windsurf, VSCodium) : même extension, installée par `/cairn:setup` ;
+  - VS Code à distance (SSH, WSL, conteneurs) : l'extension tourne là où tourne Claude Code ;
+  - **vue universelle** (`web/serve.js`) : la même roadmap dans le navigateur, à côté de n'importe quel éditeur ;
+  - **JetBrains** : plugin natif (fenêtre d'outils « Cairn » avec navigateur intégré), construit par la CI ;
+  - **Vim / Neovim** : `:Cairn` ouvre un panneau latéral mis à jour en direct ;
+  - **Zed** : tâche qui ouvre la vue universelle.
+- **Windows et Linux** : chemins, encodage et lancement de Python adaptés ; tests sur Linux, macOS et Windows à chaque envoi.
+- **Démo animée** dans le README, tirée du vrai rendu ; actions GitHub épinglées par empreinte de commit.
+
 ## 1.1.1
 
 - **Polices de marque embarquées** : Bricolage Grotesque et JetBrains Mono (SIL Open Font License 1.1, jeu latin,

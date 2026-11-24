@@ -13,13 +13,14 @@ from cairn import lecture_seule  # noqa: E402
 HOOK = Path(__file__).parent / "hooks" / "cairn.py"
 tmp = Path(tempfile.mkdtemp())
 base = {k: v for k, v in os.environ.items() if k not in ("CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_ENABLE_TODO_TOOLS")}
-base.update(CLAUDE_CONFIG_DIR=str(tmp / "claude"), TMPDIR=str(tmp / "etat"))
+base.update(CLAUDE_CONFIG_DIR=str(tmp / "claude"), TMPDIR=str(tmp / "etat"), TMP=str(tmp / "etat"), TEMP=str(tmp / "etat"))
 ECRIT = {"tool_name": "Bash", "tool_input": {"command": "npm test"}}
 
 
-def hook(evt, env=None, **extra):
-    r = subprocess.run([sys.executable, HOOK], input=json.dumps({"session_id": "s1", "hook_event_name": evt, **extra}),
-                       capture_output=True, text=True, env={**base, "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1", **(env or {})})
+def hook(evt, env=None, commande=None, **extra):
+    r = subprocess.run(commande or [sys.executable, HOOK], input=json.dumps({"session_id": "s1", "hook_event_name": evt, **extra}),
+                       capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       env={**base, "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1", **(env or {})})
     return r.returncode, r.stdout + r.stderr
 
 
@@ -47,6 +48,21 @@ taches = tmp / "claude" / "tasks" / "s1"
 taches.mkdir(parents=True)
 (taches / "1.json").write_text('{"id": "1", "status": "in_progress"}')
 assert [hook("PreToolUse", **ECRIT)[0] for _ in range(4)] == [0] * 4
+
+# /cairn:pause coupe le blocage pour cette session seulement ; /cairn:reprise le rétablit
+hook("UserPromptSubmit", prompt="/cairn:pause")
+assert [hook("PreToolUse", **ECRIT)[0] for _ in range(4)] == [0] * 4
+hook("UserPromptSubmit", session_id="autre")
+assert [hook("PreToolUse", session_id="autre", **ECRIT)[0] for _ in range(3)] == [0, 0, 2]
+hook("UserPromptSubmit", prompt="/cairn:reprise")
+assert [hook("PreToolUse", **ECRIT)[0] for _ in range(3)] == [0, 0, 2]
+
+# la commande réelle de hooks.json (python3, sinon python) transmet le code de blocage
+if os.name != "nt":
+    cmd = json.loads((HOOK.parent / "hooks.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+    shell = ["sh", "-c", cmd.replace("${CLAUDE_PLUGIN_ROOT}", str(HOOK.parent.parent))]
+    hook("UserPromptSubmit", commande=shell, session_id="sh")
+    assert [hook("PreToolUse", commande=shell, session_id="sh", **ECRIT)[0] for _ in range(3)] == [0, 0, 2]
 
 # les actions des sous-agents ne comptent pas
 hook("UserPromptSubmit")

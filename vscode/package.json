@@ -1,14 +1,15 @@
 {
   "name": "cairn",
   "displayName": "Cairn — la roadmap de Claude Code",
-  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en planche vivante, les fichiers touchés par étape, et « Claude t'attend ».",
-  "version": "1.1.1",
+  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en planche vivante, les fichiers touchés par étape (avant/après), et « Claude t'attend ».",
+  "version": "1.2.0",
   "publisher": "local",
   "icon": "media/icon.png",
   "galleryBanner": { "color": "#F4F0E8", "theme": "light" },
   "categories": ["Visualization", "Other"],
   "keywords": ["claude", "claude code", "roadmap", "tasks", "progress"],
   "engines": { "vscode": "^1.90.0" },
+  "extensionKind": ["workspace"],
   "main": "./extension.js",
   "activationEvents": ["onStartupFinished"],
   "contributes": {
@@ -18,6 +19,11 @@
     "views": {
       "cairn": [{ "id": "cairn.roadmap", "name": "Roadmap", "type": "webview" }]
     },
+    "commands": [
+      { "command": "cairn.ouvrir", "title": "Ouvrir la roadmap", "category": "Cairn" },
+      { "command": "cairn.reglages", "title": "Réglages", "category": "Cairn" },
+      { "command": "cairn.rafraichir", "title": "Rafraîchir", "category": "Cairn" }
+    ],
     "configuration": {
       "title": "Cairn",
       "properties": {

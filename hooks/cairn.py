@@ -8,6 +8,7 @@ PreToolUse       -> à la SEUIL-ième action (écriture ou commande qui modifie)
                     créée ou mise à jour depuis, bloque une seule fois l'action et demande la roadmap d'abord.
 Notification     -> Claude attend l'utilisateur (autorisation, réponse) : écrit ~/.claude/cairn/etat/<session>.json.
 Stop             -> Claude a fini son tour : même fichier, pour que VS Code le signale.
+/cairn:pause     -> (repéré dans UserPromptSubmit) plus de blocage pour cette session ; /cairn:reprise le rétablit.
 
 Sur les modèles récents, TaskCreate/TaskUpdate n'existent que si CLAUDE_CODE_ENABLE_TODO_TOOLS=1 :
 sans cette variable, le plugin prévient et ne bloque jamais. Une erreur interne ne bloque jamais non plus.
@@ -80,6 +81,11 @@ def ecrire(f, contenu):
 
 
 def main():
+    for flux in (sys.stdin, sys.stdout, sys.stderr):  # Windows : la console n'est pas forcément en UTF-8
+        try:
+            flux.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     evt = json.load(sys.stdin)
     nom = evt.get("hook_event_name")
     if APP_BUREAU:
@@ -98,9 +104,15 @@ def main():
     if nom == "Stop":
         ecrire(signal, {"fini": True, "t": time.time()})
         return 0
+    pause = CLAUDE_DIR / "cairn" / "pause" / session
     if nom == "UserPromptSubmit":
         signal.unlink(missing_ok=True)
-    if not ACTIF:  # Claude ne peut pas créer la roadmap : inutile de le bloquer
+        demande = str(evt.get("prompt", "")).strip()
+        if demande.startswith("/cairn:pause"):
+            ecrire(pause, {"t": time.time()})
+        elif demande.startswith("/cairn:reprise"):
+            pause.unlink(missing_ok=True)
+    if not ACTIF or pause.exists():  # rien à exiger : outils coupés, ou blocage mis en pause pour cette session
         return 0
 
     compteur_f = Path(tempfile.gettempdir()) / "cairn" / f"{session}.json"
