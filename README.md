@@ -9,20 +9,20 @@
 <p align="center">
   <b>Sur une grosse demande, Claude Code se fait une liste d’étapes… et la garde pour lui.</b><br>
   Cairn l’oblige à la poser, et l’affiche dans VS Code comme une vraie roadmap :<br>
-  ce qui est fait, ce qui se passe, ce qui reste.
+  ce qui est fait, ce qui se passe, ce qui reste — et quand c’est à toi de jouer.
 </p>
 
 <br>
 
 <table align="center">
   <tr>
-    <td align="center"><img src="assets/screen-clair.svg" width="250" alt="Roadmap en cours, thème clair"></td>
-    <td align="center"><img src="assets/screen-sombre.svg" width="250" alt="Roadmap en cours, thème sombre"></td>
+    <td align="center"><img src="assets/screen-clair.svg" width="250" alt="Roadmap en cours, thème clair, avec les fichiers touchés par étape"></td>
+    <td align="center"><img src="assets/screen-sombre.svg" width="250" alt="Roadmap en cours, thème sombre, Claude attend une autorisation"></td>
     <td align="center"><img src="assets/screen-sommet.svg" width="250" alt="Roadmap terminée : sommet atteint"></td>
   </tr>
   <tr>
-    <td align="center"><b>En route</b><br><sub>l’étape en cours, posée de travers</sub></td>
-    <td align="center"><b>Thème sombre</b><br><sub>suit celui de VS Code</sub></td>
+    <td align="center"><b>En route</b><br><sub>les fichiers touchés sous chaque étape</sub></td>
+    <td align="center"><b>Claude t’attend</b><br><sub>autocollant, barre d’état, notification</sub></td>
     <td align="center"><b>Sommet atteint</b><br><sub>le cairn se complète</sub></td>
   </tr>
 </table>
@@ -34,38 +34,55 @@
 </p>
 
 - **Claude Code** sait découper un travail en étapes (`TaskCreate`, `TaskUpdate`)… quand il y pense.
-- **Le plugin Cairn** lui donne la règle au démarrage de chaque session. S’il enchaîne 3 actions sans roadmap, la 3ᵉ est bloquée une seule fois, le temps qu’il la pose.
-- **L’extension VS Code** lit `~/.claude/tasks/` et dessine la roadmap de la session lancée dans le dossier ouvert, avec l’avancement dans la barre d’état.
+- **Le plugin Cairn** lui donne la règle au démarrage de chaque session. S’il enchaîne 3 actions qui modifient quelque chose sans roadmap, la 3ᵉ est bloquée une seule fois, le temps qu’il la pose. Il note aussi quand Claude attend une autorisation ou a fini son tour.
+- **L’extension VS Code** dessine la roadmap de la session lancée dans le dossier ouvert, en direct :
+
+| | |
+| --- | --- |
+| **Claude t’attend** | Autocollant qui clignote, barre d’état en alerte, notification avec « Ouvrir le terminal ». |
+| **Fichiers par étape** | Sous chaque étape, les fichiers écrits pendant qu’elle était en cours. Un clic les ouvre. |
+| **Vue vivante** | Seul ce qui change bouge : la nouvelle étape arrive en animation, le chrono avance tout seul. |
+| **Plusieurs sessions** | Deux Claude dans le même dossier ? Des pastilles pour passer de l’une à l’autre. |
+| **Journal** | Les roadmaps passées du projet ; une roadmap ancienne est grisée et datée. |
 
 ## Installer
 
-**1 · Activer les outils de tâches.** Sur les modèles récents (constaté avec Opus 5.5), Claude Code ne fournit `TaskCreate` et `TaskUpdate` qu’avec cette variable, dans `~/.claude/settings.json` :
-
-```json
-"env": { "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" }
-```
-
-**2 · Installer le plugin**, depuis une copie de ce dépôt :
+**1 · Le plugin**, depuis une copie de ce dépôt :
 
 ```bash
 claude plugin marketplace add ./cairn
 claude plugin install cairn@cairn-local
 ```
 
-**3 · Installer l’extension VS Code :**
+**2 · Le reste, en une commande.** Dans Claude Code :
 
-```bash
-code --install-extension cairn/vscode/cairn.vsix
+```
+/cairn:setup
 ```
 
-Relance Claude Code, ouvre l’onglet **Cairn** dans la barre d’activité de VS Code. C’est tout.
+Elle vérifie que les outils de tâches sont activés (sur les modèles récents, Claude Code ne fournit `TaskCreate` et `TaskUpdate` qu’avec `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), installe l’extension VS Code, et ne change rien sans ton accord. Relance ensuite Claude Code et ouvre l’onglet **Cairn** de VS Code.
+
+<details>
+<summary>Sans <code>/cairn:setup</code></summary>
+
+```bash
+python3 cairn/setup.py          # état des lieux
+python3 cairn/setup.py --fix    # ajoute la variable dans ~/.claude/settings.json et installe l’extension
+```
+
+Le paquet de l’extension (`cairn-vX.Y.Z.vsix`) est aussi joint à chaque release du dépôt : `code --install-extension cairn-vX.Y.Z.vsix`.
+
+</details>
 
 ## Réglages
 
 | Réglage | Par défaut | Effet |
 | --- | --- | --- |
-| `CAIRN_SEUIL` | `3` | Actions tolérées avant d’exiger la roadmap. |
-| `CLAUDE_CODE_ENABLE_TODO_TOOLS` | absent | Sans elle, Cairn prévient au démarrage et ne bloque rien. |
+| `cairn.accent` · `cairn.pop` (VS Code) | bleu · rose | Couleurs de l’étape en cours et des autocollants. |
+| `cairn.staleHours` (VS Code) | `2` | Au-delà, une roadmap est grisée comme ancienne. |
+| `cairn.notifications` (VS Code) | activé | Notification quand Claude t’attend. |
+| `cairn.language` (VS Code) | `auto` | Français ou anglais, selon VS Code. |
+| `CAIRN_SEUIL` (environnement de Claude) | `3` | Actions tolérées avant d’exiger la roadmap. |
 | `window.autoDetectColorScheme` (VS Code) | désactivé | Activé, le thème de VS Code, donc celui de Cairn, suit le système. |
 | <kbd>Ctrl</kbd>+<kbd>T</kbd> dans Claude Code | — | Replie la liste de tâches du terminal : la roadmap vit dans VS Code. |
 
@@ -74,18 +91,21 @@ Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
 ## Sous le capot
 
 - **Rien ne sort du poste.** Aucun appel réseau, aucune dépendance : Python et Node standard.
-- **Lecture seule.** Les fichiers de tâches de Claude Code ; dans les transcripts, uniquement le dossier de lancement de la session.
-- **Vue verrouillée.** La roadmap n’exécute aucun script (politique de sécurité « tout interdit ») et le texte des tâches est échappé.
-- **Discret.** Dans l’app de bureau Claude, qui a sa propre liste de tâches, le plugin se met en veille.
+- **Le minimum lu.** Les fichiers de tâches de Claude Code ; dans les transcripts, seulement le dossier de lancement, les changements d’étape et les *chemins* des fichiers écrits — jamais leur contenu, jamais les messages.
+- **Le minimum écrit.** Un petit fichier d’état par session dans `~/.claude/cairn/etat/` (« attend », « a fini »), et un compteur dans le dossier temporaire.
+- **Vue verrouillée.** Un seul script, le sien, autorisé par jeton ; aucune ressource externe ; le texte des tâches est échappé ; seuls les fichiers repérés dans le transcript peuvent être ouverts d’un clic.
+- **Jamais bloquant par erreur.** Si le plugin plante, Claude continue. Dans l’app de bureau Claude, qui a sa propre liste de tâches, il se met en veille.
 
 <details>
 <summary><b>Ce que contient le dépôt</b></summary>
 
 ```
-hooks/      plugin Claude Code : cairn.py, hooks.json
-vscode/     extension VS Code : extension.js, cairn.vsix, icônes
-assets/     logo, tampon et visuels du README (screens.js régénère les captures)
-check.py    contrôle des hooks sur de faux événements
+hooks/        plugin Claude Code : cairn.py, hooks.json
+commands/     /cairn:setup
+setup.py      vérification et réparation de l’installation
+vscode/       extension VS Code : extension.js, icônes
+assets/       logo, tampon et visuels du README (screens.js régénère les captures)
+check.py      contrôle des hooks sur de faux événements
 ```
 
 </details>
@@ -94,11 +114,12 @@ check.py    contrôle des hooks sur de faux événements
 
 ```bash
 python3 check.py           # hooks
-node vscode/test.js        # lecture des tâches et rendu de la roadmap
+node vscode/test.js        # sessions, fichiers par étape, signaux, rendu
+python3 setup.py           # installation (ne modifie rien sans --fix)
 node assets/screens.js     # captures du README, depuis le vrai rendu
 ```
 
-Reconstruire l’extension : `cd vscode && npx @vscode/vsce package --no-dependencies --allow-missing-repository --skip-license -o cairn.vsix`.
+Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, construire le `.vsix` (`python3 setup.py --fix` le fait), puis `gh release create vX.Y.Z cairn-vX.Y.Z.vsix --notes-file CHANGELOG.md`.
 
 ## Limites connues
 

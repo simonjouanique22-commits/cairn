@@ -1,11 +1,11 @@
 {
   "name": "cairn",
   "displayName": "Cairn — la roadmap de Claude Code",
-  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en frise, avec l'avancement en direct.",
-  "version": "1.0.0",
+  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en planche vivante, les fichiers touchés par étape, et « Claude t'attend ».",
+  "version": "1.1.0",
   "publisher": "local",
   "icon": "media/icon.png",
-  "galleryBanner": { "color": "#0F172A", "theme": "dark" },
+  "galleryBanner": { "color": "#F4F0E8", "theme": "light" },
   "categories": ["Visualization", "Other"],
   "keywords": ["claude", "claude code", "roadmap", "tasks", "progress"],
   "engines": { "vscode": "^1.90.0" },
@@ -17,6 +17,16 @@
     },
     "views": {
       "cairn": [{ "id": "cairn.roadmap", "name": "Roadmap", "type": "webview" }]
+    },
+    "configuration": {
+      "title": "Cairn",
+      "properties": {
+        "cairn.accent": { "type": "string", "default": "#2B3BFF", "format": "color", "description": "Couleur de l'étape en cours (hexadécimal)." },
+        "cairn.pop": { "type": "string", "default": "#FF7AD9", "format": "color", "description": "Couleur des surlignages et autocollants (hexadécimal)." },
+        "cairn.staleHours": { "type": "number", "default": 2, "minimum": 0.1, "description": "Au-delà de ce nombre d'heures sans mise à jour, une roadmap est grisée comme ancienne." },
+        "cairn.notifications": { "type": "boolean", "default": true, "description": "Notification VS Code quand Claude attend une autorisation ou une réponse." },
+        "cairn.language": { "type": "string", "enum": ["auto", "fr", "en"], "default": "auto", "description": "Langue de la vue (auto : celle de VS Code)." }
+      }
     }
   }
 }
