@@ -37,14 +37,15 @@ assert.strictEqual(loadRoadmap(['/work'], os.tmpdir() + '/absent'), null);
 assert.strictEqual(bar(1, 3), '▰▰▰▱▱▱▱▱▱▱');
 assert.strictEqual(bar(0, 0), '▱▱▱▱▱▱▱▱▱▱');
 
-// la frise : texte des tâches échappé, pourcentage, étape en cours
-const html = render({ done: 1, total: 2, tasks: [
-  { id: '1', subject: 'A', status: 'completed' },
-  { id: '2', subject: '<img src=x onerror=alert(1)>', activeForm: 'Codage', status: 'in_progress' },
+// la frise : texte des tâches et nom du projet échappés, pourcentage, étape en cours
+const html = render({ done: 1, total: 2, cwd: '/work/<b>projet</b>', tasks: [
+  { id: '1', subject: 'A', status: 'completed', mtime: Date.now() },
+  { id: '2', subject: '<img src=x onerror=alert(1)>', activeForm: 'Codage', status: 'in_progress', mtime: Date.now() },
 ] });
-assert(!html.includes('<img'), 'le texte des tâches doit être échappé');
-assert(html.includes('50<small>') && html.includes('step current') && html.includes('Codage'));
-assert(render(null).includes('Pas encore de roadmap'));
+assert(!html.includes('<img') && !html.includes('<b>projet'), 'le texte doit être échappé');
+assert(html.includes('<b>1</b><span>/2</span>') && html.includes('class="cur"') && html.includes('Codage') && html.includes('depuis '));
+assert(render({ done: 1, total: 1, tasks: [{ id: '1', subject: 'A', status: 'completed', mtime: 1 }] }).includes('Sommet atteint'));
+assert(render(null).includes('Rien à baliser'));
 
 fs.rmSync(home, { recursive: true });
 console.log('ok');

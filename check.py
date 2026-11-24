@@ -7,7 +7,7 @@ import tempfile
 import time
 from pathlib import Path
 
-HOOK = Path(__file__).parent / "hooks" / "roadmap.py"
+HOOK = Path(__file__).parent / "hooks" / "cairn.py"
 tmp = Path(tempfile.mkdtemp())
 base = {k: v for k, v in os.environ.items() if k not in ("CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_ENABLE_TODO_TOOLS")}
 base.update(CLAUDE_CONFIG_DIR=str(tmp / "claude"), TMPDIR=str(tmp / "etat"))
@@ -25,7 +25,7 @@ assert "TaskCreate" in json.loads(hook("SessionStart")[1])["hookSpecificOutput"]
 hook("UserPromptSubmit")
 assert [hook("PreToolUse", tool_name="Bash")[0] for _ in range(2)] == [0, 0]
 code, msg = hook("PreToolUse", tool_name="Write")
-assert code == 2 and "Roadmap manquante" in msg
+assert code == 2 and "roadmap manquante" in msg
 assert hook("PreToolUse", tool_name="Bash")[0] == 0
 
 # nouvelle demande, roadmap créée en cours de route : jamais bloquée

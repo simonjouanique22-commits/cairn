@@ -1,11 +1,11 @@
 {
-  "name": "claude-roadmap-local",
+  "name": "cairn-local",
   "owner": { "name": "local" },
   "plugins": [
     {
-      "name": "claude-roadmap",
+      "name": "cairn",
       "source": "./",
-      "description": "Oblige Claude à découper les grosses demandes en roadmap et à la tenir à jour."
+      "description": "Le plan de Claude, pierre après pierre : roadmap des grosses demandes, tenue à jour et affichée dans VS Code."
     }
   ]
 }

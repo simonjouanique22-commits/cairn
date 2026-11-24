@@ -1,5 +1,6 @@
-// Roadmap Claude : lit les tâches que Claude Code écrit dans ~/.claude/tasks/<session>/<n>.json
-// et les dessine en frise (vue latérale) + barre d'état, pour la session lancée dans le dossier ouvert.
+// Cairn : affiche dans VS Code la roadmap que Claude Code tient dans ~/.claude/tasks/<session>/<n>.json,
+// pour la session lancée dans le dossier ouvert : planche « sticker » dans la barre latérale + avancement
+// dans la barre d'état. Thème clair ou sombre selon celui de VS Code.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -51,11 +52,14 @@ function loadRoadmap(folders, claudeDir = CLAUDE_DIR) {
   }
   if (!best) return null;
   const tasks = best.files
-    .map((f) => { try { return JSON.parse(fs.readFileSync(path.join(best.dir, f), 'utf8')); } catch { return null; } })
+    .map((f) => {
+      const p = path.join(best.dir, f);
+      try { return { ...JSON.parse(fs.readFileSync(p, 'utf8')), mtime: mtimeOf(p) }; } catch { return null; }
+    })
     .filter((t) => t && t.status !== 'deleted')
     .sort((a, b) => Number(a.id) - Number(b.id));
   const done = tasks.filter((t) => t.status === 'completed').length;
-  return { sid: best.sid, tasks, done, total: tasks.length };
+  return { sid: best.sid, tasks, done, total: tasks.length, cwd: sessionCwd(best.sid, claudeDir) };
 }
 
 const bar = (done, total, width = 10) => {
@@ -64,74 +68,117 @@ const bar = (done, total, width = 10) => {
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const heure = (ms) => (ms ? new Date(ms).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '');
 
-// Frise verticale dans une barre latérale, horizontale dès que la vue est large (panneau du bas).
+// Logo S1 en miniature : pierre suivante en pointillés, en cours (bleu), faites (rose, encre).
+const MINI = '<span class="mini" aria-hidden="true"><i class="p4"></i><i class="p3"></i><i class="p2"></i><i class="p1"></i></span>';
+// Pile de lettres complète, affichée au sommet.
+const PILE = '<div class="pile" aria-hidden="true"><b class="l-c">c</b><b class="l-a">a</b><b class="l-i">i</b><b class="l-r">r</b><b class="l-n">n</b></div>';
+// Tampon S4, pour l'écran vide.
+const TAMPON = `<div class="tampon" aria-hidden="true"><svg viewBox="0 0 220 220"><defs><path id="rond" d="M110,110 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/></defs>
+<text><textPath href="#rond" textLength="536" lengthAdjust="spacing">CAIRN · LE PLAN DE CLAUDE · PIERRE APRÈS PIERRE ·</textPath></text></svg>
+<div class="coeur"><i class="p4"></i><i class="p3"></i><i class="p2"></i><i class="p1"></i></div></div>`;
+
 const CSS = `
-:root{--fg:var(--vscode-foreground,#1f2328);--muted:var(--vscode-descriptionForeground,#656d76);
---line:var(--vscode-widget-border,var(--vscode-editorWidget-border,#d0d7de));
---ok:var(--vscode-testing-iconPassed,#1a7f37);--cur:var(--vscode-charts-blue,#0969da)}
-body{margin:0;padding:14px 14px 24px;font:13px/1.45 var(--vscode-font-family,system-ui,sans-serif);color:var(--fg)}
-header{margin-bottom:20px}
-.top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.pct{font-size:30px;font-weight:700;letter-spacing:-.02em}.pct small{font-size:14px;color:var(--muted)}
-.count{color:var(--muted)}
-.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0}
-.bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--ok),color-mix(in srgb,var(--ok) 55%,var(--cur)))}
-.now{margin:0;color:var(--muted)}.now b{color:var(--fg)}
-.road{list-style:none;margin:0;padding:0}
-.step{position:relative;display:grid;grid-template-columns:26px 1fr;column-gap:12px;padding-bottom:18px}
-.step:not(:last-child)::after{content:"";position:absolute;left:12px;top:30px;bottom:2px;width:2px;
-background:repeating-linear-gradient(var(--line) 0 4px,transparent 4px 8px)}
-.step.done::after{background:var(--ok)}
-.step.current::after{background:linear-gradient(var(--cur),var(--line))}
-.node{width:26px;height:26px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;
-font-size:12px;font-weight:700;border:2px solid var(--line);color:var(--muted)}
-.done .node{background:var(--ok);border-color:var(--ok);color:#fff}
-.current .node{border-color:var(--cur);color:var(--cur);animation:pulse 1.8s ease-out infinite}
-@keyframes pulse{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--cur) 50%,transparent)}to{box-shadow:0 0 0 10px transparent}}
-@media (prefers-reduced-motion:reduce){.current .node{animation:none}}
-.body{min-width:0;padding-top:3px}
-.title{font-weight:600;overflow-wrap:anywhere}
-.done .title{color:var(--muted);font-weight:500}
-.current .body{margin-top:-4px;padding:6px 10px;border-radius:8px;
-background:color-mix(in srgb,var(--cur) 10%,transparent);border:1px solid color-mix(in srgb,var(--cur) 40%,transparent)}
-.active{color:var(--muted);font-style:italic;margin-top:2px}
-.tag{font:700 10px/1 var(--vscode-font-family,system-ui,sans-serif);text-transform:uppercase;letter-spacing:.05em;color:var(--cur);margin-right:4px;white-space:nowrap}
-.chip{display:inline-block;margin-top:4px;font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+:root{--paper:#FFFDF8;--ink:#121212;--text:#121212;--muted:#5E5A52;--soft:#8A857B;--accent:#2B3BFF;--pop:#FF7AD9;
+--sheet-shadow:#121212;--card-shadow:#121212;--box-fg:#FFFDF8;
+--brand:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:var(--vscode-editor-font-family,'JetBrains Mono',ui-monospace,Menlo,monospace)}
+body.vscode-dark,body.vscode-high-contrast{--paper:#222226;--ink:#F4F0E8;--text:#F4F0E8;--muted:#C9C4BA;--soft:#85807A;
+--sheet-shadow:var(--pop);--card-shadow:#000;--box-fg:#121212}
+*{box-sizing:border-box}
+body{margin:0;padding:8px 14px 18px 8px;font-family:var(--brand);color:var(--text)}
+.sheet{max-width:560px;margin:0 auto;padding:16px;background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;
+box-shadow:5px 5px 0 var(--sheet-shadow);display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;gap:8px}
+.word{font-weight:800;font-size:20px;letter-spacing:-.04em}
+.mini,.coeur{display:flex;flex-direction:column;align-items:center;gap:1.5px}
+.mini i{display:block;height:4px;border-radius:99px}.mini .p4{width:7px;border:1px dashed var(--ink);height:3.5px}
+.mini .p3{width:11px;background:var(--accent)}.mini .p2{width:15px;background:var(--pop)}.mini .p1{width:19px;background:var(--ink);height:4.5px}
+.chip{font-family:var(--mono);font-size:10.5px;font-weight:600;padding:0 8px;border:2px solid var(--ink);border-radius:99px;white-space:nowrap}
+.proj{margin-left:auto;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.count{display:flex;align-items:baseline;gap:4px}
+.count b{font-weight:800;font-size:64px;letter-spacing:-.05em;line-height:.9}
+.count span{font-weight:800;font-size:30px;letter-spacing:-.03em;color:var(--soft)}
+.count em{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bar{display:grid;gap:5px}.bar i{height:14px;border:2px solid var(--ink);border-radius:99px}
+.bar .d{background:var(--ink)}.bar .c{background:var(--accent)}
+.steps{list-style:none;margin:0;padding:4px 0 0;display:flex;flex-direction:column;gap:9px}
+.row{display:flex;align-items:center;gap:9px}
+.box{width:20px;height:20px;flex:none;border-radius:6px;display:flex;align-items:center;justify-content:center;
+font-family:var(--mono);font-size:10.5px;font-weight:700}
+.done .box{background:var(--ink);color:var(--box-fg);font-family:var(--brand);font-size:12px;font-weight:800}
+.todo .box{border:2px dashed var(--ink)}
+.t{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow-wrap:anywhere}
+.done .t{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--pop);text-decoration-thickness:4px}
+time{font-family:var(--mono);font-size:10.5px;color:var(--muted);white-space:nowrap}
+.cur{margin:4px 0}
+.card{padding:12px 14px;border:2.5px solid var(--ink);border-radius:16px;background:var(--accent);color:#fff;
+box-shadow:4px 4px 0 var(--card-shadow);transform:rotate(-1.5deg);display:flex;flex-direction:column;gap:5px}
+.cardtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.card time{color:#fff}
+.tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:0 7px;border:2px solid #121212;border-radius:99px;
+background:var(--pop);color:#121212}
+.ct{font-size:18px;font-weight:800;line-height:1.15;letter-spacing:-.02em;overflow-wrap:anywhere}
+.af{font-size:12.5px}
 summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}
-summary::after{content:" ▾";color:var(--muted);font-weight:400}details[open] summary::after{content:" ▴"}
-details p{margin:4px 0 0;color:var(--muted);white-space:pre-wrap}
-.empty{color:var(--muted);text-align:center;margin-top:40px}
-@media (min-width:640px){
-.road{display:flex;align-items:flex-start;overflow-x:auto;padding:4px 0 8px}
-.step{flex:1 0 130px;grid-template-columns:1fr;justify-items:center;text-align:center;row-gap:10px;padding:0 6px}
-.step:not(:last-child)::after{left:calc(50% + 17px);right:calc(-50% + 17px);top:12px;bottom:auto;width:auto;height:2px;
-background:repeating-linear-gradient(90deg,var(--line) 0 4px,transparent 4px 8px)}
-.step.done::after{background:var(--ok)}
-.step.current::after{background:linear-gradient(90deg,var(--cur),var(--line))}
-.current .body{margin-top:0}
-.tag{display:block;margin:4px 0 2px}}`;
+summary::after{content:" ▾";font-size:10px;opacity:.6}details[open] summary::after{content:" ▴"}
+details p{margin:4px 0 0;font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;white-space:pre-wrap}
+.card details p{color:#fff;opacity:.85}
+.foot{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.summit{align-self:center;margin:4px 0 0;padding:4px 18px;background:var(--pop);color:#121212;border:2.5px solid var(--ink);
+border-radius:99px;box-shadow:4px 4px 0 var(--card-shadow);transform:rotate(-4deg);font-weight:800;font-size:24px;letter-spacing:-.03em}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips .fin{background:var(--accent);color:#fff}
+.pile{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:8px}
+.pile b{display:block;border:2px solid var(--ink);border-radius:99px;font-weight:800;line-height:1.1}
+.l-c{padding:0 9px;font-size:16px;background:var(--pop);color:#121212;transform:rotate(-6deg)}
+.l-a{padding:0 12px;font-size:20px;background:var(--accent);color:#fff;transform:rotate(4deg)}
+.l-i{padding:0 18px;font-size:23px;background:var(--paper);transform:rotate(-3deg)}
+.l-r{padding:0 24px;font-size:27px;background:var(--pop);color:#121212;transform:rotate(5deg)}
+.l-n{padding:0 32px;font-size:32px;background:var(--ink);color:var(--paper);transform:rotate(-2deg)}
+.empty{align-items:center;text-align:center;padding:26px 16px}
+.empty h2{margin:6px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em}.empty p{margin:0;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.tampon{position:relative;width:190px;height:190px;border-radius:50%;background:var(--pop);border:2.5px solid var(--ink);
+box-shadow:5px 5px 0 var(--card-shadow);transform:rotate(-10deg);display:flex;align-items:center;justify-content:center}
+.tampon svg{position:absolute;inset:0;width:100%;height:100%}
+.tampon text{font-family:var(--mono);font-size:12.5px;font-weight:700;fill:#121212}
+.coeur{width:104px;height:104px;border-radius:50%;background:#FFFDF8;border:2.5px solid #121212;justify-content:center;gap:3px}
+.coeur i{display:block;height:11px;border:2px solid #121212;border-radius:99px}.coeur .p4{width:20px;border-style:dashed}
+.coeur .p3{width:32px;background:var(--accent)}.coeur .p2{width:46px;background:var(--pop)}.coeur .p1{width:60px;background:#121212}`;
 
 function render(r) {
-  let body = `<p class="empty">Pas encore de roadmap.<br>Claude en crée une dès qu'une tâche compte plusieurs étapes.</p>`;
+  let body = `<main class="sheet empty">${TAMPON}<h2>Rien à baliser pour l'instant</h2>
+<p>Cairn affiche le plan de Claude dès qu'une demande compte plusieurs étapes.</p></main>`;
   if (r?.total) {
     const { tasks, done, total } = r;
-    const pct = Math.round((done / total) * 100);
-    const current = tasks.find((t) => t.status === 'in_progress');
-    const now = current ? `En cours : <b>${esc(current.activeForm || current.subject)}</b>`
-      : done === total ? 'Tout est terminé 🎉' : 'En attente de la prochaine étape';
+    const complete = done === total;
+    const proj = r.cwd ? `<span class="chip proj" title="${esc(r.cwd)}">${esc(path.basename(r.cwd))}</span>` : '';
+    const segs = tasks.map((t) => `<i class="${t.status === 'completed' ? 'd' : t.status === 'in_progress' ? 'c' : ''}"></i>`).join('');
+    const titre = (t, cls) => {
+      const desc = t.description && t.description !== t.subject ? esc(t.description) : '';
+      return desc ? `<details class="${cls}"><summary>${esc(t.subject)}</summary><p>${desc}</p></details>`
+        : `<span class="${cls}">${esc(t.subject)}</span>`;
+    };
     const steps = tasks.map((t) => {
-      const s = t.status === 'completed' ? 'done' : t.status === 'in_progress' ? 'current' : 'todo';
-      const title = t.description && t.description !== t.subject
-        ? `<details><summary class="title">${esc(t.subject)}</summary><p>${esc(t.description)}</p></details>`
-        : `<div class="title">${esc(t.subject)}</div>`;
-      const active = s === 'current' ? `<div class="active"><span class="tag">En cours</span>${esc(t.activeForm || '')}…</div>` : '';
-      const wait = s === 'todo' && t.blockedBy?.length ? `<span class="chip">attend #${t.blockedBy.map(esc).join(', #')}</span>` : '';
-      return `<li class="step ${s}"><span class="node">${s === 'done' ? '✓' : esc(t.id)}</span><div class="body">${title}${active}${wait}</div></li>`;
+      if (t.status === 'completed') {
+        return `<li class="row done"><span class="box">✓</span>${titre(t, 't')}<time>${heure(t.mtime)}</time></li>`;
+      }
+      if (t.status === 'in_progress') {
+        return `<li class="cur"><div class="card"><div class="cardtop"><span class="tag">EN COURS</span><time>depuis ${heure(t.mtime)}</time></div>
+${titre(t, 'ct')}${t.activeForm ? `<span class="af">${esc(t.activeForm)}…</span>` : ''}</div></li>`;
+      }
+      const wait = t.blockedBy?.length ? `<span class="chip">après #${t.blockedBy.map(esc).join(', #')}</span>` : '';
+      return `<li class="row todo"><span class="box">${esc(t.id)}</span>${titre(t, 't')}${wait}</li>`;
     }).join('');
-    body = `<header><div class="top"><span class="pct">${pct}<small> %</small></span><span class="count">${done} / ${total} étapes</span></div>
-<div class="bar"><i style="width:${pct}%"></i></div><p class="now">${now}</p></header>
-<ol class="road">${steps}<li class="step ${done === total ? 'done' : 'todo'}"><span class="node">⚑</span><div class="body"><div class="title">Arrivée</div></div></li></ol>`;
+    const head = complete
+      ? `<div class="summit">Sommet atteint ✓</div>`
+      : `<div class="count"><b>${done}</b><span>/${total}</span><em>étapes · ${Math.round((done / total) * 100)} %</em></div>`;
+    const after = complete
+      ? `<div class="chips"><span class="chip">${total} étapes</span><span class="chip fin">fini à ${heure(Math.max(...tasks.map((t) => t.mtime || 0)))}</span></div>`
+      : '';
+    const foot = complete ? `${PILE}<span class="foot" style="align-self:center">le cairn est complet.</span>` : '<span class="foot">→ arrivée au sommet</span>';
+    body = `<main class="sheet"><header class="top">${MINI}<span class="word">cairn</span>${proj}</header>${head}
+<div class="bar" style="grid-template-columns:repeat(${total},minmax(0,1fr))">${segs}</div>${after}
+<ol class="steps">${steps}</ol>${foot}</main>`;
   }
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
@@ -143,7 +190,7 @@ function activate(context) {
   let roadmap = null, view, lastHtml;
   const mark = { completed: '✓', in_progress: '▶', pending: '○' };
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  status.command = 'claudeRoadmap.steps.focus';
+  status.command = 'cairn.roadmap.focus';
 
   const paint = () => {
     if (!view) return;
@@ -163,9 +210,9 @@ function activate(context) {
     if (!roadmap?.total) return status.hide();
     const { tasks, done, total } = roadmap;
     const current = tasks.find((t) => t.status === 'in_progress');
-    status.text = `$(checklist) ${bar(done, total, 8)} ${done}/${total}` +
-      (current ? ` · ${current.activeForm || current.subject}` : done === total ? ' · terminé' : '');
-    status.tooltip = tasks.map((t) => `${mark[t.status] || '○'} ${t.id}. ${t.subject}`).join('\n');
+    status.text = `$(milestone) ${bar(done, total, 8)} ${done}/${total}` +
+      (current ? ` · ${current.activeForm || current.subject}` : done === total ? ' · sommet atteint' : '');
+    status.tooltip = 'Cairn — roadmap de Claude\n' + tasks.map((t) => `${mark[t.status] || '○'} ${t.id}. ${t.subject}`).join('\n');
     status.show();
   };
 
@@ -185,7 +232,7 @@ function activate(context) {
   refresh();
   context.subscriptions.push(
     status,
-    vscode.window.registerWebviewViewProvider('claudeRoadmap.steps', {
+    vscode.window.registerWebviewViewProvider('cairn.roadmap', {
       resolveWebviewView(v) {
         view = v;
         lastHtml = undefined;

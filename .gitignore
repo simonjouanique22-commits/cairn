@@ -1,2 +1,4 @@
 .DS_Store
 __pycache__/
+# lien de compatibilité pour les sessions lancées avant le renommage
+hooks/roadmap.py

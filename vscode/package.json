@@ -1,18 +1,22 @@
 {
-  "name": "claude-roadmap",
-  "displayName": "Roadmap Claude",
-  "description": "Affiche la roadmap (liste de tâches) de Claude Code et son avancement.",
-  "version": "0.2.0",
+  "name": "cairn",
+  "displayName": "Cairn — la roadmap de Claude Code",
+  "description": "Le plan de Claude Code, pierre après pierre : sa liste de tâches en frise, avec l'avancement en direct.",
+  "version": "1.0.0",
   "publisher": "local",
+  "icon": "media/icon.png",
+  "galleryBanner": { "color": "#0F172A", "theme": "dark" },
+  "categories": ["Visualization", "Other"],
+  "keywords": ["claude", "claude code", "roadmap", "tasks", "progress"],
   "engines": { "vscode": "^1.90.0" },
   "main": "./extension.js",
   "activationEvents": ["onStartupFinished"],
   "contributes": {
     "viewsContainers": {
-      "activitybar": [{ "id": "claudeRoadmap", "title": "Roadmap Claude", "icon": "icon.svg" }]
+      "activitybar": [{ "id": "cairn", "title": "Cairn", "icon": "media/cairn.svg" }]
     },
     "views": {
-      "claudeRoadmap": [{ "id": "claudeRoadmap.steps", "name": "Étapes", "type": "webview" }]
+      "cairn": [{ "id": "cairn.roadmap", "name": "Roadmap", "type": "webview" }]
     }
   }
 }

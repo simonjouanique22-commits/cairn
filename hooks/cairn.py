@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hooks du plugin claude-roadmap : Claude tient sa liste de tâches (la roadmap) sur les grosses demandes.
+"""Hooks du plugin Cairn : Claude tient sa liste de tâches (la roadmap) sur les grosses demandes.
 
 SessionStart     -> rappelle la règle à Claude (ou prévient l'utilisateur si les outils de tâches sont coupés).
 UserPromptSubmit -> note le début de la demande.
@@ -16,12 +16,12 @@ import tempfile
 import time
 from pathlib import Path
 
-SEUIL = int(os.environ.get("CLAUDE_ROADMAP_SEUIL", "3"))  # réglage : actions tolérées avant d'exiger la roadmap
+SEUIL = int(os.environ.get("CAIRN_SEUIL", "3"))  # réglage : actions tolérées avant d'exiger la roadmap
 # ponytail: sur les anciens modèles (Opus 4.7, Sonnet 4.6…) les outils existent sans la variable ; ils ne sont pas détectés
 ACTIF = os.environ.get("CLAUDE_CODE_ENABLE_TODO_TOOLS", "").lower() in ("1", "true", "yes")
 APP_BUREAU = os.environ.get("CLAUDE_CODE_ENTRYPOINT") == "claude-desktop"  # l'app a sa propre liste de tâches
 AVERTISSEMENT = (
-    'Roadmap inactive : les outils de tâches de Claude Code sont coupés. Ajoute '
+    'Cairn inactif : les outils de tâches de Claude Code sont coupés. Ajoute '
     '"env": { "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } dans ~/.claude/settings.json, puis relance Claude.'
 )
 CHARGER = "si TaskCreate/TaskUpdate sont différés, charge-les d'abord avec ToolSearch (`select:TaskCreate,TaskUpdate`)"
@@ -32,7 +32,7 @@ REGLE = (
     "cette liste est affichée à l'utilisateur comme roadmap."
 )
 BLOCAGE = (
-    "Roadmap manquante : cette demande compte déjà plusieurs actions. Avant de continuer, crée la liste des "
+    "Cairn — roadmap manquante : cette demande compte déjà plusieurs actions. Avant de continuer, crée la liste des "
     f"étapes avec TaskCreate ({CHARGER}) : une tâche par étape, y compris celles déjà faites (passe-les en "
     "completed), et l'étape en cours en in_progress. Relance ensuite l'action qui vient d'être bloquée."
 )
@@ -60,7 +60,7 @@ def main():
         return 0
 
     session = evt.get("session_id", "inconnue")
-    etat_f = Path(tempfile.gettempdir()) / "claude-roadmap" / f"{session}.json"
+    etat_f = Path(tempfile.gettempdir()) / "cairn" / f"{session}.json"
     neuf = {"debut": time.time(), "actions": 0, "relance": False}
 
     if nom == "UserPromptSubmit":
