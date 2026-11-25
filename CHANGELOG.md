@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3
+
+- **The trail stays in one piece.** A step Claude added later and already finished used to sit after the steps still to
+  do (Claude Code lists them by creation), so "Step 8 of 10" showed with 8 steps done. Steps are now shown done first,
+  then the one in progress, then the rest, each in Claude's order.
+
 ## 1.5.2
 
 - **+/− you can trust.** Counted from Claude's edits themselves, not from Claude Code's backups, which it skips for a

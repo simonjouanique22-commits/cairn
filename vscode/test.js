@@ -34,6 +34,8 @@ assert.deepStrictEqual(loadSessions(['/work/project-a'], home).map((s) => s.sid)
 assert.strictEqual(loadRoadmap(['/work/project-b'], home).sid, 'bbb');
 assert.strictEqual(loadRoadmap([], home).sid, 'bbb'); // no folder open: the most recent
 assert.strictEqual(loadRoadmap(['/work/other'], home), null);
+session('ord', '/work/project-o', ['completed', 'in_progress', 'pending', 'completed'], 0); // step 4 added later, already done
+assert.deepStrictEqual(loadRoadmap(['/work/project-o'], home).tasks.map((x) => x.id), ['1', '4', '2', '3']);
 assert.strictEqual(loadRoadmap(['/work/project-a/sub-folder'], home).tasks.at(-1).id, '10');
 assert.strictEqual(loadRoadmap(['/work'], os.tmpdir() + '/missing'), null);
 

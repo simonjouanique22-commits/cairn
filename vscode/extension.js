@@ -49,6 +49,7 @@ const inFolders = (cwd, folders) => !folders.length || (!!cwd && folders.some((w
   return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }));
 
+const RANK = { completed: 0, in_progress: 1 };
 function readTasks(dir, files) {
   return files
     .map((f) => {
@@ -56,7 +57,9 @@ function readTasks(dir, files) {
       try { return { ...JSON.parse(fs.readFileSync(p, 'utf8')), mtime: mtimeOf(p) }; } catch { return null; }
     })
     .filter((t) => t && t.status !== 'deleted')
-    .sort((a, b) => Number(a.id) - Number(b.id));
+    // the walked part of the trail stays in one piece: done steps first (a step added later and already done too),
+    // then the one in progress, then the rest, each in Claude's order
+    .sort((a, b) => (RANK[a.status] ?? 2) - (RANK[b.status] ?? 2) || Number(a.id) - Number(b.id));
 }
 
 // Task lists of the sessions started in the open folders (all of them when no folder is open), most recent first.
