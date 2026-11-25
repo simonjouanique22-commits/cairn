@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
+const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, writeHookConfig, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cairn-'));
 const transcript = (sid) => path.join(home, 'projects', 'p-' + sid, sid + '.jsonl');
@@ -178,6 +178,14 @@ const writes = ['cat > a.txt', 'echo x >> log', "python3 - <<'EOF'", 'sed -i "" 
 const reads = ['npm test 2>&1 | tail -3', 'grep -n x f > /dev/null', 'sed -n 1,9p f', 'git diff --stat', 'uv run pytest -q', 'ls -la', 'a && b || c'];
 assert(writes.every((c) => WRITES.test(c)) && !reads.some((c) => WRITES.test(c)), [...writes.filter((c) => !WRITES.test(c)), ...reads.filter((c) => WRITES.test(c))].join(' / '));
 assert(!renderApp(r, { stats: { 1: { add: 3, del: 0 } }, cmdFiles: { 1: new Set(['/x']) } }).includes('+3')); // partial: no numbers
+// Claude settings for the hook: only those changed from their default; one put back to default is removed
+const cfgFile = path.join(home, 'cairn', 'config.json');
+fs.writeFileSync(cfgFile, JSON.stringify({ planGate: true, other: 'kept' }));
+assert.strictEqual(writeHookConfig({ planGate: undefined, threshold: 5, snapshots: false }, home), true);
+assert.deepStrictEqual(JSON.parse(fs.readFileSync(cfgFile, 'utf8')), { other: 'kept', threshold: 5, snapshots: false });
+assert.strictEqual(writeHookConfig({ threshold: 5 }, home), false); // unchanged: not rewritten
+if (process.platform !== 'win32') assert.strictEqual(fs.statSync(cfgFile).mode & 0o777, 0o600);
+fs.unlinkSync(cfgFile);
 // exact numbers from the hook's snapshots win, whatever wrote the files
 fs.mkdirSync(path.join(home, 'cairn', 'snaps'), { recursive: true });
 fs.writeFileSync(path.join(home, 'cairn', 'snaps', 'ddd.json'), JSON.stringify({ cur: '2', steps: { 2: { start: 'a', end: 'b', add: 12, del: 3 } } }));

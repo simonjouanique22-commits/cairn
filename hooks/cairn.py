@@ -34,19 +34,43 @@ import tempfile
 import time
 from pathlib import Path
 
-# setting: actions allowed before the roadmap is required (CAIRN_SEUIL kept for older setups)
-THRESHOLD = int(os.environ.get("CAIRN_THRESHOLD") or os.environ.get("CAIRN_SEUIL") or "3")
 # ponytail: on older models (Opus 4.7, Sonnet 4.6…) the tools exist without the variable; that is not detected
 ENABLED = os.environ.get("CLAUDE_CODE_ENABLE_TODO_TOOLS", "").lower() in ("1", "true", "yes")
 DESKTOP_APP = os.environ.get("CLAUDE_CODE_ENTRYPOINT") == "claude-desktop"  # the app has its own task list
 CLAUDE_DIR = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
+CONFIG = CLAUDE_DIR / "cairn" / "config.json"
+
+
+def setting(raw, key, default):
+    """A setting: Claude's environment (raw) first, then ~/.claude/cairn/config.json (written by the editor extension
+    from its settings), then the default."""
+    if raw:
+        if isinstance(default, bool):
+            return raw.lower() in ("1", "true", "yes")
+        try:
+            return max(type(default)(raw), 0)
+        except ValueError:
+            return default
+    try:
+        v = json.loads(CONFIG.read_text(encoding="utf-8")).get(key)
+    except (OSError, ValueError, AttributeError):
+        return default
+    if isinstance(default, bool):
+        return v if isinstance(v, bool) else default
+    return type(default)(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else default
+
+
+env = os.environ.get
+# actions allowed before the roadmap is required (CAIRN_SEUIL kept for older setups); 0 or off: never required
+REQUIRE = setting(env("CAIRN_REQUIRE_ROADMAP"), "requireRoadmap", True)
+THRESHOLD = setting(env("CAIRN_THRESHOLD") or env("CAIRN_SEUIL"), "threshold", 3)
 ROOT = Path(__file__).resolve().parent.parent
 HISTORY = CLAUDE_DIR / "cairn" / "history"
-HISTORY_DAYS = float(os.environ.get("CAIRN_HISTORY_DAYS") or "90")  # setting: how long roadmaps are kept
+HISTORY_DAYS = setting(env("CAIRN_HISTORY_DAYS"), "historyDays", 90.0)  # how long roadmaps are kept
 WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 STEER = CLAUDE_DIR / "cairn" / "steer"
-GATE_WAIT = min(840.0, float(os.environ.get("CAIRN_GATE_WAIT") or "600"))  # below the Stop hook's timeout (900 s)
-CONFIG = CLAUDE_DIR / "cairn" / "config.json"
+GATE_WAIT = min(840.0, setting(env("CAIRN_GATE_WAIT"), "gateWait", 600.0))  # below the Stop hook's timeout (900 s)
+SNAPSHOTS = setting(env("CAIRN_SNAPSHOTS"), "snapshots", True)  # exact +/− from git snapshots
 SNAPS = CLAUDE_DIR / "cairn" / "snaps"
 OBJECTS = CLAUDE_DIR / "cairn" / "objects"
 SNAP_DAYS = 7  # snapshots (copies of the changed files) are deleted after a week without use
@@ -180,9 +204,7 @@ def save_history(session, h):
 # "t", "sent"}]}: written by the editor view, read here; an item is marked sent once Claude has it.
 
 def gate_enabled():
-    if os.environ.get("CAIRN_PLAN_GATE", "").lower() in ("1", "true", "yes"):
-        return True
-    return load_json(CONFIG, {}).get("planGate") is True
+    return setting(env("CAIRN_PLAN_GATE"), "planGate", False)
 
 
 def wait_for_go(f):
@@ -274,6 +296,8 @@ def snapshot(cwd):
 
 def count_lines(evt, session):
     """Snapshot at a step's start, then after each action and at its end: its +/− so far."""
+    if not SNAPSHOTS:
+        return
     tool, inp = evt.get("tool_name"), evt.get("tool_input") or {}
     f = SNAPS / f"{session}.json"
     s = load_json(f, {})
@@ -454,7 +478,8 @@ def main():
             write(paused, {"t": time.time()})
         elif prompt.startswith(("/cairn:resume", "/cairn:reprise")):
             paused.unlink(missing_ok=True)
-    if not ENABLED or paused.exists():  # nothing to require: tools disabled, or blocking paused for this session
+    if not ENABLED or not REQUIRE or not THRESHOLD or paused.exists():  # nothing to require: tools disabled, turned
+        # off in the settings, or paused for this session
         return finish(0)
 
     counter_f = Path(tempfile.gettempdir()) / "cairn" / f"{session}.json"

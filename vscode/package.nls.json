@@ -10,5 +10,12 @@
   "config.staleHours": "After this many hours without an update, a roadmap is greyed out as old.",
   "config.notifications": "VS Code notification when Claude is waiting for a permission or an answer.",
   "config.planGate": "Claude stops after making its plan, until you say go from the roadmap (with your changes and notes).",
-  "config.language": "Language of the view (auto: VS Code's)."
+  "config.language": "Language of the view (auto: VS Code's).",
+  "config.claude": "Cairn: Claude",
+  "config.view": "Cairn: view",
+  "config.requireRoadmap": "On a large request, Claude must make its roadmap before going further (it is stopped once, with the reason).",
+  "config.threshold": "Actions Claude may take on a request before the roadmap is required.",
+  "config.gateWait": "With the plan gate on, how long Claude waits for your go (seconds) before simply ending its turn; then any message, or /cairn:go, carries the go.",
+  "config.snapshots": "Exact +/− per step: in a git repository, snapshots of the project at each step, kept in ~/.claude/cairn/objects for a week (your repository is never written to). Off: only Claude's own edits are counted.",
+  "config.historyDays": "How long past roadmaps are kept (days)."
 }

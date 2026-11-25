@@ -108,16 +108,20 @@ Elle vérifie que les outils de tâches sont activés (sur les modèles récents
 
 ## Réglages
 
-| Réglage | Par défaut | Effet |
+Dans VS Code, le bouton ⚙ de la vue (ou Réglages → Cairn). Les réglages **Claude** vont dans `~/.claude/cairn/config.json`, que le hook lit à chaque action : ils s’appliquent tout de suite. Ailleurs, modifier ce fichier, ou poser la variable dans l’environnement de Claude, qui l’emporte.
+
+| Réglage (VS Code · environnement de Claude) | Par défaut | Effet |
 | --- | --- | --- |
+| `cairn.requireRoadmap` · `CAIRN_REQUIRE_ROADMAP` | activé | Sur une grosse demande, Claude fait sa roadmap avant d’aller plus loin (arrêté une fois, avec la raison). |
+| `cairn.threshold` · `CAIRN_THRESHOLD` | `3` | Actions tolérées avant d’exiger la roadmap. |
+| `cairn.planGate` · `CAIRN_PLAN_GATE=1` | désactivé | Claude s’arrête après avoir fait son plan, jusqu’à ton go depuis la vue. |
+| `cairn.gateWait` · `CAIRN_GATE_WAIT` | `600` | Secondes pendant lesquelles Claude attend ton go avant de simplement finir son tour (ensuite n’importe quel message, ou `/cairn:go`, le porte). |
+| `cairn.snapshots` · `CAIRN_SNAPSHOTS` | activé | +/− exact par étape grâce aux instantanés git (voir Confidentialité) ; désactivé, seules les modifications de Claude sont comptées. |
+| `cairn.historyDays` · `CAIRN_HISTORY_DAYS` | `90` | Durée de conservation des roadmaps passées. |
 | `cairn.accent` · `cairn.pop` (VS Code) | bleu · rose | Couleurs de l’étape en cours et des autocollants. |
 | `cairn.staleHours` (VS Code) | `2` | Au-delà, une roadmap est grisée comme ancienne. |
 | `cairn.notifications` (VS Code) | activé | Notification quand Claude t’attend. |
 | `cairn.language` (VS Code) | `auto` | Anglais ou français, selon VS Code. |
-| `CAIRN_THRESHOLD` (environnement de Claude) | `3` | Actions tolérées avant d’exiger la roadmap. |
-| `CAIRN_HISTORY_DAYS` (environnement de Claude) | `90` | Durée de conservation des roadmaps passées. |
-| `cairn.planGate` (VS Code) · `CAIRN_PLAN_GATE=1` (environnement de Claude) | désactivé | Claude s’arrête après avoir fait son plan, jusqu’à ton go. |
-| `CAIRN_GATE_WAIT` (environnement de Claude) | `600` | Secondes pendant lesquelles Claude attend ton go avant de simplement finir son tour (ensuite n’importe quel message, ou `/cairn:go`, le porte). |
 | `window.autoDetectColorScheme` (VS Code) | désactivé | Activé, le thème de VS Code, donc celui de Cairn, suit le système. |
 | <kbd>Ctrl</kbd>+<kbd>T</kbd> dans Claude Code | — | Replie la liste de tâches du terminal : la roadmap vit dans l’éditeur. |
 

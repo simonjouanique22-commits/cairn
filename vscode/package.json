@@ -2,42 +2,182 @@
   "name": "cairn",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "publisher": "local",
   "icon": "media/icon.png",
-  "galleryBanner": { "color": "#F4F0E8", "theme": "light" },
-  "categories": ["Visualization", "Other"],
-  "keywords": ["claude", "claude code", "roadmap", "tasks", "progress"],
-  "engines": { "vscode": "^1.90.0" },
-  "extensionKind": ["workspace"],
+  "galleryBanner": {
+    "color": "#F4F0E8",
+    "theme": "light"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "roadmap",
+    "tasks",
+    "progress"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
   "main": "./extension.js",
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "viewsContainers": {
-      "activitybar": [{ "id": "cairn", "title": "Cairn", "icon": "media/cairn.svg" }]
+      "activitybar": [
+        {
+          "id": "cairn",
+          "title": "Cairn",
+          "icon": "media/cairn.svg"
+        }
+      ]
     },
     "views": {
-      "cairn": [{ "id": "cairn.roadmap", "name": "Roadmap", "type": "webview" }]
+      "cairn": [
+        {
+          "id": "cairn.roadmap",
+          "name": "Roadmap",
+          "type": "webview"
+        }
+      ]
     },
     "commands": [
-      { "command": "cairn.open", "title": "%command.open%", "category": "Cairn" },
-      { "command": "cairn.history", "title": "%command.history%", "category": "Cairn", "icon": "$(history)" },
-      { "command": "cairn.settings", "title": "%command.settings%", "category": "Cairn" },
-      { "command": "cairn.refresh", "title": "%command.refresh%", "category": "Cairn" }
+      {
+        "command": "cairn.open",
+        "title": "%command.open%",
+        "category": "Cairn"
+      },
+      {
+        "command": "cairn.history",
+        "title": "%command.history%",
+        "category": "Cairn",
+        "icon": "$(history)"
+      },
+      {
+        "command": "cairn.settings",
+        "title": "%command.settings%",
+        "category": "Cairn",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "cairn.refresh",
+        "title": "%command.refresh%",
+        "category": "Cairn"
+      }
     ],
     "menus": {
-      "view/title": [{ "command": "cairn.history", "when": "view == cairn.roadmap", "group": "navigation" }]
+      "view/title": [
+        {
+          "command": "cairn.history",
+          "when": "view == cairn.roadmap",
+          "group": "navigation"
+        },
+        {
+          "command": "cairn.settings",
+          "when": "view == cairn.roadmap",
+          "group": "navigation@9"
+        }
+      ]
     },
-    "configuration": {
-      "title": "Cairn",
-      "properties": {
-        "cairn.accent": { "type": "string", "default": "#2B3BFF", "format": "color", "description": "%config.accent%" },
-        "cairn.pop": { "type": "string", "default": "#FF7AD9", "format": "color", "description": "%config.pop%" },
-        "cairn.staleHours": { "type": "number", "default": 2, "minimum": 0.1, "description": "%config.staleHours%" },
-        "cairn.notifications": { "type": "boolean", "default": true, "description": "%config.notifications%" },
-        "cairn.planGate": { "type": "boolean", "default": false, "description": "%config.planGate%" },
-        "cairn.language": { "type": "string", "enum": ["auto", "en", "fr"], "default": "auto", "description": "%config.language%" }
+    "configuration": [
+      {
+        "title": "%config.claude%",
+        "properties": {
+          "cairn.requireRoadmap": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.requireRoadmap%",
+            "order": 0
+          },
+          "cairn.threshold": {
+            "type": "number",
+            "default": 3,
+            "minimum": 1,
+            "maximum": 50,
+            "description": "%config.threshold%",
+            "order": 1
+          },
+          "cairn.planGate": {
+            "type": "boolean",
+            "default": false,
+            "description": "%config.planGate%",
+            "order": 2
+          },
+          "cairn.gateWait": {
+            "type": "number",
+            "default": 600,
+            "minimum": 30,
+            "maximum": 840,
+            "description": "%config.gateWait%",
+            "order": 3
+          },
+          "cairn.snapshots": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.snapshots%",
+            "order": 4
+          },
+          "cairn.historyDays": {
+            "type": "number",
+            "default": 90,
+            "minimum": 1,
+            "maximum": 3650,
+            "description": "%config.historyDays%",
+            "order": 5
+          }
+        }
+      },
+      {
+        "title": "%config.view%",
+        "properties": {
+          "cairn.accent": {
+            "type": "string",
+            "default": "#2B3BFF",
+            "format": "color",
+            "description": "%config.accent%",
+            "order": 0
+          },
+          "cairn.pop": {
+            "type": "string",
+            "default": "#FF7AD9",
+            "format": "color",
+            "description": "%config.pop%",
+            "order": 1
+          },
+          "cairn.staleHours": {
+            "type": "number",
+            "default": 2,
+            "minimum": 0.1,
+            "description": "%config.staleHours%",
+            "order": 2
+          },
+          "cairn.notifications": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.notifications%",
+            "order": 3
+          },
+          "cairn.language": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "en",
+              "fr"
+            ],
+            "default": "auto",
+            "description": "%config.language%",
+            "order": 4
+          }
+        }
       }
-    }
+    ]
   }
 }

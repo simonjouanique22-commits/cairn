@@ -240,6 +240,23 @@ function loadHistory(folders = [], claudeDir = CLAUDE_DIR, max = 300) {
   return out.sort((a, b) => b.end - a.end).slice(0, max).map((e) => ({ ...e, here: inFolders(e.cwd, folders) }));
 }
 
+// ---------- settings the hook reads ----------
+// ~/.claude/cairn/config.json holds the extension's Claude settings that differ from their default (a setting put back
+// to its default is removed, so the hook's default applies). Claude's environment variables still win over it.
+const HOOK_SETTINGS = ['requireRoadmap', 'threshold', 'planGate', 'gateWait', 'snapshots', 'historyDays'];
+function writeHookConfig(values, claudeDir = CLAUDE_DIR) {
+  const f = path.join(claudeDir, 'cairn', 'config.json');
+  let cfg = {};
+  try { cfg = JSON.parse(fs.readFileSync(f, 'utf8')) || {}; } catch { /* none yet, or broken: rewritten */ }
+  const next = { ...cfg };
+  for (const [k, v] of Object.entries(values)) if (v === undefined) delete next[k]; else next[k] = v;
+  if (JSON.stringify(next) === JSON.stringify(cfg)) return false;
+  fs.mkdirSync(path.dirname(f), { recursive: true, mode: 0o700 });
+  fs.writeFileSync(f + '.tmp', JSON.stringify(next, null, 2) + '\n', { mode: 0o600 });
+  fs.renameSync(f + '.tmp', f);
+  return true;
+}
+
 // ---------- steering: the user's notes and edits on the roadmap; the hook passes them on to Claude ----------
 // ~/.claude/cairn/steer/<session>.json = {"gate": "waiting" | "go" | null, "items": [{"id", "kind": "note" | "remove" |
 // "add", "step", "subject", "text", "t", "sent"}]}. The hook marks an item sent once Claude has it.
@@ -983,17 +1000,10 @@ function activate(context) {
     };
   };
 
-  // The plan gate setting goes to ~/.claude/cairn/config.json, where the hook reads it (only once the user has set it).
-  const syncGate = () => {
-    const set = vscode.workspace.getConfiguration('cairn').inspect('planGate');
-    const on = set?.workspaceValue ?? set?.globalValue;
-    if (typeof on !== 'boolean') return;
-    const f = path.join(CLAUDE_DIR, 'cairn', 'config.json');
-    let cfg = {};
-    try { cfg = JSON.parse(fs.readFileSync(f, 'utf8')) || {}; } catch { /* no config yet */ }
-    if (cfg.planGate === on) return;
-    fs.mkdirSync(path.dirname(f), { recursive: true });
-    fs.writeFileSync(f, JSON.stringify({ ...cfg, planGate: on }, null, 2) + '\n');
+  // The settings the hook reads go to ~/.claude/cairn/config.json.
+  const syncConfig = () => {
+    const c = vscode.workspace.getConfiguration('cairn');
+    writeHookConfig(Object.fromEntries(HOOK_SETTINGS.map((k) => [k, c.get(k) === c.inspect(k)?.defaultValue ? undefined : c.get(k)])));
   };
 
   // Files git sees as changed, through the built-in Git extension (no process started).
@@ -1131,7 +1141,7 @@ function activate(context) {
     const activeNow = vscode.window.state.focused && (view?.visible || panel?.visible);
     loop = setTimeout(() => { watch(); refresh(); plan(); }, activeNow ? 2000 : 15000);
   };
-  try { syncGate(); } catch { /* config folder not writable: the env variable still works */ }
+  try { syncConfig(); } catch { /* config folder not writable: the env variable still works */ }
   watch();
   refresh();
   plan();
@@ -1156,13 +1166,13 @@ function activate(context) {
     }),
     vscode.commands.registerCommand('cairn.open', () => vscode.commands.executeCommand('cairn.roadmap.focus')),
     vscode.commands.registerCommand('cairn.history', openHistory),
-    vscode.commands.registerCommand('cairn.settings', () => vscode.commands.executeCommand('workbench.action.openSettings', 'cairn')),
+    vscode.commands.registerCommand('cairn.settings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:local.cairn')),
     vscode.commands.registerCommand('cairn.refresh', refresh),
     vscode.window.onDidChangeWindowState(() => { schedule(); plan(); }),
     vscode.workspace.onDidChangeWorkspaceFolders(schedule),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (!e.affectsConfiguration('cairn')) return;
-      try { syncGate(); } catch { /* see above */ }
+      try { syncConfig(); } catch { /* see above */ }
       schedule();
     }),
     { dispose: () => { clearTimeout(loop); clearTimeout(timer); Object.values(watchers).forEach((w) => w.close()); panel?.dispose(); } },
@@ -1171,6 +1181,6 @@ function activate(context) {
 
 module.exports = {
   activate, deactivate() {}, loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, emptyTrace, backupBefore, filesByCommand,
-  readSignal, readSteer, steer, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell,
+  readSignal, readSteer, steer, writeHookConfig, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell,
   fontFaces, CLAUDE_DIR,
 };

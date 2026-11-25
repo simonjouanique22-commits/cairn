@@ -243,4 +243,26 @@ assert "said go" in json.loads(hook("UserPromptSubmit", session_id="g2", prompt=
 hook("UserPromptSubmit", env={"CAIRN_SEUIL": "1"}, session_id="s4")
 assert hook("PreToolUse", env={"CAIRN_SEUIL": "1"}, session_id="s4", **WRITE)[0] == 2
 
+# settings from the editor extension (~/.claude/cairn/config.json); Claude's environment wins
+cfg = tmp / "claude" / "cairn" / "config.json"
+cfg.write_text(json.dumps({"threshold": 1}))
+hook("UserPromptSubmit", session_id="c1")
+assert hook("PreToolUse", session_id="c1", **WRITE)[0] == 2
+cfg.write_text(json.dumps({"threshold": 1, "requireRoadmap": False}))
+hook("UserPromptSubmit", session_id="c2")
+assert hook("PreToolUse", session_id="c2", **WRITE)[0] == 0
+hook("UserPromptSubmit", env={"CAIRN_REQUIRE_ROADMAP": "1"}, session_id="c2")
+assert hook("PreToolUse", env={"CAIRN_REQUIRE_ROADMAP": "1"}, session_id="c2", **WRITE)[0] == 2
+cfg.write_text(json.dumps({"planGate": True, "gateWait": 1}))
+hook("PostToolUse", session_id="c3", tool_name="TaskCreate", tool_input={"subject": "A"}, tool_response={"task": {"id": "1"}})
+assert json.loads((tmp / "claude" / "cairn" / "steer" / "c3.json").read_text())["gate"] == "waiting"
+if shutil.which("git"):
+    cfg.write_text(json.dumps({"snapshots": False}))
+    done("c4", "TaskUpdate", cwd=str(repo), tool_input={"taskId": "1", "status": "in_progress"})
+    assert not (tmp / "claude" / "cairn" / "snaps" / "c4.json").exists()
+cfg.write_text("{not json")  # a broken file: the defaults
+hook("UserPromptSubmit", session_id="c5")
+assert [hook("PreToolUse", session_id="c5", **WRITE)[0] for _ in range(3)] == [0, 0, 2]
+cfg.unlink()
+
 print("ok")

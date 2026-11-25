@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+- **Every setting in the editor.** VS Code now has two groups of settings, *Cairn: Claude* and *Cairn: view*, and a ⚙
+  button on the roadmap. The Claude ones (roadmap required or not, threshold, plan gate, how long the gate waits,
+  +/− snapshots, how long the history is kept) used to be environment variables only; they now go to
+  `~/.claude/cairn/config.json`, which the hook reads at each action. The variables still win over the file.
+- New: turn off the roadmap requirement (`cairn.requireRoadmap`) or the +/− snapshots (`cairn.snapshots`).
+- A setting put back to its default leaves the file, so the plan gate really turns off again.
+
 ## 1.6.0
 
 - **Exact +/− per step, whoever writes.** In a git repository, the hook takes a snapshot of the working tree when a
