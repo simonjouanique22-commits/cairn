@@ -11,7 +11,8 @@
 <p align="center">
   <b>On a big request, Claude Code makes itself a list of steps… and keeps it to itself.</b><br>
   Cairn makes it lay that list out, and shows it next to your code as a real roadmap:<br>
-  what's done, what's happening, what's left — and when it's your turn.
+  what's done, what's happening, what's left — and when it's your turn.<br>
+  And you steer from there: approve the plan, leave a note on a step, add or remove one.
 </p>
 
 <p align="center">
@@ -20,14 +21,16 @@
 
 <table align="center">
   <tr>
-    <td align="center"><img src="assets/screen-light.svg" width="250" alt="Roadmap in progress, light theme, with the files touched at each step"></td>
-    <td align="center"><img src="assets/screen-dark.svg" width="250" alt="Roadmap in progress, dark theme, Claude is waiting for a permission"></td>
-    <td align="center"><img src="assets/screen-summit.svg" width="250" alt="Finished roadmap: summit reached"></td>
+    <td align="center"><img src="assets/screen-light.svg" width="200" alt="Roadmap in progress, light theme: the trail, the step in progress, the lines changed at each step"></td>
+    <td align="center"><img src="assets/screen-dark.svg" width="200" alt="Roadmap in progress, dark theme, Claude is waiting for a permission"></td>
+    <td align="center"><img src="assets/screen-steer.svg" width="200" alt="A plan waiting for your go: a note left on a step, a step removed"></td>
+    <td align="center"><img src="assets/screen-history.svg" width="200" alt="History tab: past roadmaps by day, searchable"></td>
   </tr>
   <tr>
-    <td align="center"><b>On the way</b><br><sub>the files touched under each step</sub></td>
+    <td align="center"><b>On the trail</b><br><sub>where Claude is, what each step changed</sub></td>
     <td align="center"><b>Claude is waiting for you</b><br><sub>sticker, status bar, notification</sub></td>
-    <td align="center"><b>Summit reached</b><br><sub>the cairn is complete</sub></td>
+    <td align="center"><b>Steer it</b><br><sub>approve, edit, annotate the plan</sub></td>
+    <td align="center"><b>History</b><br><sub>every roadmap, kept and searchable</sub></td>
   </tr>
 </table>
 
@@ -45,19 +48,21 @@
 | --- | --- |
 | **Claude is waiting for you** | Blinking sticker, status bar on alert, notification with "Open terminal". |
 | **Before / after** | Under each step, the files it touched. One click opens the *before the step ↔ now* diff. Files changed by a command (`sed -i`, a script…) show up dashed. |
-| **Live view** | Only what changes moves: the new step slides in, the timer ticks on its own. |
+| **The trail** | One stone per step on the way to the summit, "you are here" on the current one, and a rough time left learnt from your past roadmaps. Only what changes moves. |
+| **+/− per step** | Each finished step shows the lines it changed; open it for its files, one click for the *before the step ↔ now* diff. |
+| **Steer Claude** | Leave a note on a step, remove a step, add one: Claude gets it at its next action, without being stopped. With the **plan gate** on, Claude stops after making its plan; you edit it, press **Let Claude go**, and it picks up at once with your changes. |
 | **Several sessions** | Two Claudes in the same folder? Pills to switch between them. |
-| **Log** | The project's past roadmaps; an old roadmap is greyed out and dated. |
+| **History** | Every roadmap is kept on your machine, after Claude Code has cleared its own list: search it, reopen it with the time and files of each step, copy it as Markdown for a pull request. A wide view opens in an editor tab. |
 
 ## In your editor
 
 | Editor | How | Verified |
 | --- | --- | --- |
-| **VS Code** | Extension ("Cairn" in the activity bar) | Yes: installed and used for real; every release tested |
+| **VS Code** | Extension ("Cairn" in the activity bar, history in an editor tab) | Yes: installed and used for real; every release tested |
 | **Cursor, Windsurf, VSCodium** | The same extension (`/cairn:setup` installs it in the ones it finds) | No: not tried in these editors yet |
 | **Remote VS Code** (SSH, WSL, containers) | The extension runs where Claude Code runs | No |
 | **JetBrains** (IntelliJ, PyCharm, WebStorm…) | Native plugin: "Cairn" tool window with an embedded browser | Built by GitHub CI; not run in an IDE yet |
-| **Vim** | `:Cairn` opens a side panel updated live | Yes: tested with Vim 9.1 |
+| **Vim** | `:Cairn` opens a side panel updated live (no history yet) | Yes: tested with Vim 9.1 |
 | **Neovim** | The same plugin (Vimscript) | No: same code, not tried yet |
 | **Zed** | A task that opens the universal view (Zed has no panel for extensions) | No |
 | **Everything else** (Sublime Text, Emacs, Xcode…) | **Universal view** in the browser | Yes: tested in a browser |
@@ -77,7 +82,7 @@ claude plugin install cairn@cairn-local
 /cairn:setup
 ```
 
-It checks that the task tools are enabled (on recent models, Claude Code only provides `TaskCreate` and `TaskUpdate` with `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), installs the extension in VS Code, Cursor, Windsurf or VSCodium if they are there, and changes nothing without your consent. Then restart Claude Code.
+It checks that the task tools are enabled (on recent models, Claude Code only provides `TaskCreate` and `TaskUpdate` with `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), that the copy of the plugin Claude Code runs is up to date (it copies plugins when installing them), installs the extension in VS Code, Cursor, Windsurf or VSCodium if they are there, and imports the roadmaps still in Claude Code's transcripts into the history. It changes nothing without your consent. Then restart Claude Code.
 
 <details>
 <summary><b>Other editors</b></summary>
@@ -97,7 +102,8 @@ It checks that the task tools are enabled (on recent models, Claude Code only pr
 | --- | --- | --- |
 | Claude Code | `/cairn:setup` | Checks and repairs the installation. |
 | Claude Code | `/cairn:pause` · `/cairn:resume` | Turns blocking off, then back on, for the current session. |
-| VS Code (palette) | "Cairn: Open the roadmap" · "Settings" · "Refresh" | |
+| Claude Code | `/cairn:go` | Says go to a plan waiting for your review, with the changes left in the view. |
+| VS Code (palette) | "Cairn: Open the roadmap" · "Open the history" · "Settings" · "Refresh" | The history also opens from the ⟲ button of the view. |
 | Vim / Neovim | `:Cairn` | Opens or closes the panel. |
 
 ## Settings
@@ -109,6 +115,9 @@ It checks that the task tools are enabled (on recent models, Claude Code only pr
 | `cairn.notifications` (VS Code) | on | Notification when Claude is waiting for you. |
 | `cairn.language` (VS Code) | `auto` | English or French, following VS Code. |
 | `CAIRN_THRESHOLD` (Claude's environment) | `3` | Actions allowed before the roadmap is required. |
+| `CAIRN_HISTORY_DAYS` (Claude's environment) | `90` | How long past roadmaps are kept. |
+| `cairn.planGate` (VS Code) · `CAIRN_PLAN_GATE=1` (Claude's environment) | off | Claude stops after making its plan, until you say go. |
+| `CAIRN_GATE_WAIT` (Claude's environment) | `600` | Seconds Claude waits for your go before simply ending its turn (then any message, or `/cairn:go`, carries it). |
 | `window.autoDetectColorScheme` (VS Code) | off | On, VS Code's theme — and so Cairn's — follows the system. |
 | <kbd>Ctrl</kbd>+<kbd>T</kbd> in Claude Code | — | Folds the terminal's task list: the roadmap lives in the editor. |
 
@@ -117,8 +126,10 @@ Turn the plugin off: `claude plugin disable cairn@cairn-local`.
 ## Under the hood
 
 - **Nothing leaves your machine.** No network calls, no dependencies: plain Python and Node. The universal view only listens on `127.0.0.1` and refuses requests addressed to any other name.
-- **Reads the minimum.** Claude Code's task files; in transcripts, only the launch folder, step changes, the *paths* of written files and the references of the "before" backups — never message content. The backups themselves are only read for the diff you open, read-only.
-- **Writes the minimum.** A small state file per session in `~/.claude/cairn/` ("waiting", "done", "paused"), and a counter in the temp folder.
+- **Reads the minimum.** Claude Code's task files; in transcripts, only the launch folder, step changes, the *paths* of written files and the references of the "before" backups. The backups themselves are only read for the diff you open, read-only.
+- **Keeps the minimum.** For each roadmap: the first line of the request that started it (its title), step titles, statuses, times and file paths — never the rest of the conversation. In `~/.claude/cairn/history/`, readable by you only, deleted after 90 days; delete the folder to forget everything.
+- **Writes the minimum.** That history, a small state file per session in `~/.claude/cairn/` ("waiting", "done", "paused"), your notes and edits for Claude in `~/.claude/cairn/steer/` (readable by you only), and a counter in the temp folder.
+- **Steering stays yours.** A note reaches Claude as context, capped at 500 characters, cleaned of control characters, and clearly labelled as coming from you through Cairn; step titles are taken from the roadmap, never from the page. Nothing is sent anywhere else.
 - **Locked-down view.** One script, its own, allowed by nonce; no external resource — the brand fonts are embedded; task text is escaped; only files found in the transcript or by git can be opened with a click.
 - **Accessible.** Progress and "Claude is waiting for you" are announced to screen readers; visible keyboard focus; contrasts checked automatically; animations off when the system asks.
 - **Light.** Re-reads every 2 s in the foreground, every 15 s in the background.
@@ -129,7 +140,7 @@ Turn the plugin off: `claude plugin disable cairn@cairn-local`.
 
 ```
 hooks/        Claude Code plugin: cairn.py, hooks.json
-commands/     /cairn:setup, /cairn:pause, /cairn:resume
+commands/     /cairn:setup, /cairn:pause, /cairn:resume, /cairn:go
 setup.py      checks and repairs the installation
 vscode/       VS Code extension (and forks): extension.js, icons, fonts (media/fonts, OFL licenses), English + French
 web/          universal view: serve.js
@@ -163,6 +174,9 @@ Releasing: update `CHANGELOG.md` and the version numbers, then push a `vX.Y.Z` t
 - On older models, where the tools exist without the variable, the fallback blocking stays inactive.
 - The "before the step" diff relies on Claude Code's backups; without one, it falls back to the git diff (since the last commit).
 - The embedded fonts cover the Latin alphabet; other scripts use the system fonts.
+- The history starts with version 1.4; `/cairn:setup` brings back what Claude Code's transcripts still hold (about 30 days). A roadmap is titled after the request that started it: a short follow-up ("ok, go on") keeps the previous title, and the line of steps under it tells them apart.
+- The plan gate waits for your go at most `CAIRN_GATE_WAIT` seconds (10 min by default); <kbd>Esc</kbd> in Claude Code stops the wait. A note arrives at Claude's next action: an action already running is not interrupted. Steps cannot be reordered yet.
+- The Vim panel shows the roadmap, not the history or the steering.
 - Interface languages: English and French. Adding one takes a `T` entry in `vscode/extension.js`, a `package.nls.<lang>.json` file and an `s:T` entry in the Vim plugin.
 
 ## Credits

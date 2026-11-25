@@ -11,7 +11,8 @@
 <p align="center">
   <b>Sur une grosse demande, Claude Code se fait une liste d’étapes… et la garde pour lui.</b><br>
   Cairn l’oblige à la poser, et l’affiche à côté de ton code comme une vraie roadmap :<br>
-  ce qui est fait, ce qui se passe, ce qui reste — et quand c’est à toi de jouer.
+  ce qui est fait, ce qui se passe, ce qui reste — et quand c’est à toi de jouer.<br>
+  Et tu pilotes depuis là : valider le plan, laisser une note sur une étape, en ajouter ou en retirer une.
 </p>
 
 <p align="center">
@@ -20,14 +21,16 @@
 
 <table align="center">
   <tr>
-    <td align="center"><img src="assets/screen-light.svg" width="250" alt="Roadmap en cours, thème clair, avec les fichiers touchés par étape"></td>
-    <td align="center"><img src="assets/screen-dark.svg" width="250" alt="Roadmap en cours, thème sombre, Claude attend une autorisation"></td>
-    <td align="center"><img src="assets/screen-summit.svg" width="250" alt="Roadmap terminée : sommet atteint"></td>
+    <td align="center"><img src="assets/screen-light.svg" width="200" alt="Roadmap en cours, thème clair, étapes faites surlignées, fichiers touchés par étape"></td>
+    <td align="center"><img src="assets/screen-dark.svg" width="200" alt="Roadmap en cours, thème sombre, Claude attend une autorisation"></td>
+    <td align="center"><img src="assets/screen-steer.svg" width="200" alt="Un plan qui attend ton go : une note sur une étape, une étape retirée"></td>
+    <td align="center"><img src="assets/screen-history.svg" width="200" alt="Onglet Historique : les roadmaps passées par jour, avec recherche"></td>
   </tr>
   <tr>
-    <td align="center"><b>En route</b><br><sub>les fichiers touchés sous chaque étape</sub></td>
+    <td align="center"><b>Sur le sentier</b><br><sub>où en est Claude, ce que chaque étape a changé</sub></td>
     <td align="center"><b>Claude t’attend</b><br><sub>autocollant, barre d’état, notification</sub></td>
-    <td align="center"><b>Sommet atteint</b><br><sub>le cairn se complète</sub></td>
+    <td align="center"><b>Piloter</b><br><sub>valider, modifier, annoter le plan</sub></td>
+    <td align="center"><b>Historique</b><br><sub>chaque roadmap, gardée et cherchable</sub></td>
   </tr>
 </table>
 
@@ -45,19 +48,21 @@
 | --- | --- |
 | **Claude t’attend** | Autocollant qui clignote, barre d’état en alerte, notification avec « Ouvrir le terminal ». |
 | **Avant / après** | Sous chaque étape, les fichiers touchés. Un clic ouvre la comparaison *avant l’étape ↔ maintenant*. Les fichiers modifiés par une commande (`sed -i`, script…) apparaissent en pointillés. |
-| **Vue vivante** | Seul ce qui change bouge : la nouvelle étape arrive en animation, le chrono avance tout seul. |
+| **Le sentier** | Une pierre par étape jusqu’au sommet, « tu es ici » sur l’étape en cours, et le temps restant estimé d’après tes roadmaps passées. Seul ce qui change bouge. |
+| **+/− par étape** | Chaque étape finie montre les lignes qu’elle a changées ; ouvre-la pour ses fichiers, un clic pour la comparaison *avant l’étape ↔ maintenant*. |
+| **Piloter Claude** | Laisse une note sur une étape, retire-en une, ajoutes-en une : Claude le reçoit à sa prochaine action, sans être arrêté. Avec la **validation du plan**, Claude s’arrête après avoir fait son plan ; tu le modifies, tu cliques **Let Claude go**, et il repart aussitôt avec tes changements. |
 | **Plusieurs sessions** | Deux Claude dans le même dossier ? Des pastilles pour passer de l’une à l’autre. |
-| **Journal** | Les roadmaps passées du projet ; une roadmap ancienne est grisée et datée. |
+| **Historique** | Chaque roadmap est gardée sur ton poste, même après que Claude Code a vidé sa propre liste : cherche-la, rouvre-la avec le temps et les fichiers de chaque étape, copie-la en Markdown pour une pull request. Une vue large s’ouvre dans un onglet de l’éditeur. |
 
 ## Dans ton éditeur
 
 | Éditeur | Comment | Vérifié |
 | --- | --- | --- |
-| **VS Code** | Extension (barre d’activité « Cairn ») | Oui : installée et utilisée en vrai ; chaque version testée |
+| **VS Code** | Extension (barre d’activité « Cairn », historique dans un onglet de l’éditeur) | Oui : installée et utilisée en vrai ; chaque version testée |
 | **Cursor, Windsurf, VSCodium** | La même extension (`/cairn:setup` l’installe dans ceux qu’il trouve) | Non : pas encore essayée dans ces éditeurs |
 | **VS Code à distance** (SSH, WSL, conteneurs) | L’extension tourne là où tourne Claude Code | Non |
 | **JetBrains** (IntelliJ, PyCharm, WebStorm…) | Plugin natif : fenêtre d’outils « Cairn » avec navigateur intégré | Compilé par la CI GitHub ; pas encore lancé dans un IDE |
-| **Vim** | `:Cairn` ouvre un panneau latéral mis à jour en direct | Oui : testé avec Vim 9.1 |
+| **Vim** | `:Cairn` ouvre un panneau latéral mis à jour en direct (pas encore d’historique) | Oui : testé avec Vim 9.1 |
 | **Neovim** | Le même plugin (Vimscript) | Non : même code, pas encore essayé |
 | **Zed** | Tâche qui ouvre la vue universelle (Zed n’a pas de panneau pour les extensions) | Non |
 | **Tous les autres** (Sublime Text, Emacs, Xcode…) | **Vue universelle** dans le navigateur | Oui : testée dans un navigateur |
@@ -77,7 +82,7 @@ claude plugin install cairn@cairn-local
 /cairn:setup
 ```
 
-Elle vérifie que les outils de tâches sont activés (sur les modèles récents, Claude Code ne fournit `TaskCreate` et `TaskUpdate` qu’avec `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), installe l’extension dans VS Code, Cursor, Windsurf ou VSCodium s’ils sont là, et ne change rien sans ton accord. Relance ensuite Claude Code.
+Elle vérifie que les outils de tâches sont activés (sur les modèles récents, Claude Code ne fournit `TaskCreate` et `TaskUpdate` qu’avec `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), que la copie du plugin que Claude Code exécute est à jour (il copie les plugins à l’installation), installe l’extension dans VS Code, Cursor, Windsurf ou VSCodium s’ils sont là, et importe dans l’historique les roadmaps encore présentes dans les transcripts de Claude Code. Elle ne change rien sans ton accord. Relance ensuite Claude Code.
 
 <details>
 <summary><b>Autres éditeurs</b></summary>
@@ -97,7 +102,8 @@ Elle vérifie que les outils de tâches sont activés (sur les modèles récents
 | --- | --- | --- |
 | Claude Code | `/cairn:setup` | Vérifie et répare l’installation. |
 | Claude Code | `/cairn:pause` · `/cairn:resume` | Coupe puis rétablit le blocage pour la session en cours. |
-| VS Code (palette) | « Cairn : Ouvrir la roadmap » · « Réglages » · « Rafraîchir » (en français si VS Code l’est) | |
+| Claude Code | `/cairn:go` | Donne le go à un plan qui attend ta relecture, avec les changements laissés dans la vue. |
+| VS Code (palette) | « Cairn : Ouvrir la roadmap » · « Ouvrir l’historique » · « Réglages » · « Rafraîchir » (en français si VS Code l’est) | L’historique s’ouvre aussi depuis le bouton ⟲ de la vue. |
 | Vim / Neovim | `:Cairn` | Ouvre ou ferme le panneau. |
 
 ## Réglages
@@ -109,6 +115,9 @@ Elle vérifie que les outils de tâches sont activés (sur les modèles récents
 | `cairn.notifications` (VS Code) | activé | Notification quand Claude t’attend. |
 | `cairn.language` (VS Code) | `auto` | Anglais ou français, selon VS Code. |
 | `CAIRN_THRESHOLD` (environnement de Claude) | `3` | Actions tolérées avant d’exiger la roadmap. |
+| `CAIRN_HISTORY_DAYS` (environnement de Claude) | `90` | Durée de conservation des roadmaps passées. |
+| `cairn.planGate` (VS Code) · `CAIRN_PLAN_GATE=1` (environnement de Claude) | désactivé | Claude s’arrête après avoir fait son plan, jusqu’à ton go. |
+| `CAIRN_GATE_WAIT` (environnement de Claude) | `600` | Secondes pendant lesquelles Claude attend ton go avant de simplement finir son tour (ensuite n’importe quel message, ou `/cairn:go`, le porte). |
 | `window.autoDetectColorScheme` (VS Code) | désactivé | Activé, le thème de VS Code, donc celui de Cairn, suit le système. |
 | <kbd>Ctrl</kbd>+<kbd>T</kbd> dans Claude Code | — | Replie la liste de tâches du terminal : la roadmap vit dans l’éditeur. |
 
@@ -117,8 +126,10 @@ Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
 ## Sous le capot
 
 - **Rien ne sort du poste.** Aucun appel réseau, aucune dépendance : Python et Node standard. La vue universelle n’écoute que sur `127.0.0.1` et refuse les requêtes adressées à un autre nom.
-- **Le minimum lu.** Les fichiers de tâches de Claude Code ; dans les transcripts, seulement le dossier de lancement, les changements d’étape, les *chemins* des fichiers écrits et les références des copies « avant » — jamais le contenu des messages. Les copies elles-mêmes ne sont lues que pour la comparaison que tu ouvres, en lecture seule.
-- **Le minimum écrit.** Un petit fichier d’état par session dans `~/.claude/cairn/` (« attend », « a fini », « en pause »), et un compteur dans le dossier temporaire.
+- **Le minimum lu.** Les fichiers de tâches de Claude Code ; dans les transcripts, seulement le dossier de lancement, les changements d’étape, les *chemins* des fichiers écrits et les références des copies « avant ». Les copies elles-mêmes ne sont lues que pour la comparaison que tu ouvres, en lecture seule.
+- **Le minimum gardé.** Pour chaque roadmap : la première ligne de la demande qui l’a lancée (son titre), les titres d’étapes, statuts, horaires et chemins de fichiers — jamais le reste de la conversation. Dans `~/.claude/cairn/history/`, lisible par toi seul, effacé au bout de 90 jours ; supprimer le dossier efface tout.
+- **Le minimum écrit.** Cet historique, un petit fichier d’état par session dans `~/.claude/cairn/` (« attend », « a fini », « en pause »), tes notes et changements pour Claude dans `~/.claude/cairn/steer/` (lisibles par toi seul), et un compteur dans le dossier temporaire.
+- **Le pilotage reste à toi.** Une note arrive à Claude comme contexte, limitée à 500 caractères, nettoyée des caractères de contrôle, et présentée comme venant de toi via Cairn ; les titres d’étapes viennent de la roadmap, jamais de la page. Rien n’est envoyé ailleurs.
 - **Vue verrouillée.** Un seul script, le sien, autorisé par jeton ; aucune ressource externe — les polices de marque sont embarquées ; le texte des tâches est échappé ; seuls les fichiers repérés dans le transcript ou par git peuvent être ouverts d’un clic.
 - **Accessible.** Avancement et « Claude t’attend » annoncés aux lecteurs d’écran ; focus visible au clavier ; contrastes vérifiés automatiquement ; animations coupées si le système le demande.
 - **Sobre.** Relecture toutes les 2 s au premier plan, toutes les 15 s en arrière-plan.
@@ -129,7 +140,7 @@ Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
 
 ```
 hooks/        plugin Claude Code : cairn.py, hooks.json
-commands/     /cairn:setup, /cairn:pause, /cairn:resume
+commands/     /cairn:setup, /cairn:pause, /cairn:resume, /cairn:go
 setup.py      vérification et réparation de l’installation
 vscode/       extension VS Code (et forks) : extension.js, icônes, polices (media/fonts, licences OFL)
 web/          vue universelle : serve.js
@@ -163,6 +174,8 @@ Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, 
 - Sur les anciens modèles, où les outils existent sans la variable, le blocage de secours reste inactif.
 - La comparaison « avant l’étape » dépend des copies de Claude Code ; sans copie, c’est la comparaison avec git (depuis le dernier commit).
 - Les polices embarquées couvrent l’alphabet latin (français compris) ; les autres écritures passent par les polices du système.
+- L’historique commence avec la version 1.4 ; `/cairn:setup` récupère ce que les transcripts de Claude Code gardent encore (environ 30 jours). Une roadmap porte le titre de la demande qui l’a lancée : une relance courte (« ok, continue ») garde le titre précédent, et la ligne d’étapes en dessous les distingue.
+- La validation du plan attend ton go au plus `CAIRN_GATE_WAIT` secondes (10 min par défaut) ; <kbd>Échap</kbd> dans Claude Code arrête l’attente. Une note arrive à la prochaine action de Claude : une action déjà en cours n’est pas interrompue. On ne peut pas encore réordonner les étapes.
 
 ## Crédits
 

@@ -2,11 +2,13 @@
   "displayName": "Cairn — Claude Code's roadmap",
   "description": "Claude Code's plan, stone by stone: its task list as a live sheet, the files touched at each step (before/after), and \"Claude is waiting for you\".",
   "command.open": "Open the roadmap",
+  "command.history": "Open the history",
   "command.settings": "Settings",
   "command.refresh": "Refresh",
   "config.accent": "Color of the step in progress (hex).",
   "config.pop": "Color of highlights and stickers (hex).",
   "config.staleHours": "After this many hours without an update, a roadmap is greyed out as old.",
   "config.notifications": "VS Code notification when Claude is waiting for a permission or an answer.",
+  "config.planGate": "Claude stops after making its plan, until you say go from the roadmap (with your changes and notes).",
   "config.language": "Language of the view (auto: VS Code's)."
 }

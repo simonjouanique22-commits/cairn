@@ -20,20 +20,50 @@ const files = { 2: new Set(['/demo/src/model.ts']), 3: new Set(['/demo/src/Setti
 const inProgress = { sid: 'demo', tasks, done: 2, total: 5, cwd: '/demo/my-project' };
 const summit = { sid: 'demo', tasks: tasks.map((t, i) => ({ ...t, status: 'completed', mtime: m(i * 6) })), done: 5, total: 5, cwd: '/demo/my-project' };
 const waiting = { kind: 'waiting', message: 'Claude needs your permission to use Bash' };
+// fictitious history, as the hook keeps it (see loadHistory)
+const roadmap = (id, title, start, steps, stopped) => {
+  let at = start;
+  const list = steps.map(([subject, min, files = []], i) => {
+    const done = !stopped || i < stopped;
+    const s = { id: String(i + 1), subject, status: done ? 'completed' : 'pending', started: at, ended: done ? at + min * 60000 : 0, files };
+    if (done) at += min * 60000;
+    return s;
+  });
+  return { id, sid: id, cwd: '/demo/my-project', here: true, title, start, end: at, steps: list, done: list.filter((x) => x.status === 'completed').length, total: list.length };
+};
+const history = [
+  roadmap('a', 'Add a dark mode to the settings screen', m(-30), [['Read the theme and settings code', 4], ['Add the dark palette tokens', 5, ['/demo/src/tokens.css']],
+    ['Wire the theme switch into the settings screen', 9, ['/demo/src/Settings.tsx', '/demo/src/useTheme.ts']], ['Remember the choice for each user', 6, ['/demo/src/prefs.ts']],
+    ['Write the tests', 8, ['/demo/test/theme.test.ts']], ['Update the docs', 4, ['/demo/README.md']]]),
+  roadmap('b', 'Fix the login redirect loop', m(-195), [['Reproduce the loop', 5], ['Find the faulty redirect', 6, ['/demo/src/auth.ts']], ['Fix it and add a test', 7, ['/demo/test/auth.test.ts']]]),
+  roadmap('c', 'Write the release notes for 2.4', m(-1263), [['List the merged changes', 3], ['Draft the notes', 4, ['/demo/CHANGELOG.md']], ['Proofread', 1]]),
+  roadmap('d', 'Move the CI to the new runners', m(-1355), [['Read the current workflows', 6], ['Switch the test job', 12, ['/demo/.github/workflows/tests.yml']],
+    ['Switch the release job', 9], ['Clean up the old runners', 5]], 2),
+];
+
+// +/− per step, time left, and a plan waiting for the user's go (with a note and a step to remove)
+const stats = { 1: { add: 0, del: 0 }, 2: { add: 38, del: 4 }, 3: { add: 40, del: 6 } };
+const eta = 14 * 60000;
+const planned = { sid: 'demo', tasks: tasks.map((x) => ({ ...x, status: 'pending' })), done: 0, total: 5, cwd: '/demo/my-project' };
+const steering = { gate: 'held', items: [
+  { id: 'n1', kind: 'note', step: '3', subject: tasks[2].subject, text: "Reuse the existing API client, don't add a new one.", sent: false },
+  { id: 'r1', kind: 'remove', step: '5', subject: tasks[4].subject, sent: false }] };
 
 // ponytail: fixed heights measured in a browser (embedded fonts) + margin; measure again if the design changes
 const variants = [
-  ['screen-light.svg', 'vscode-light', '#F3F3F3', inProgress, { files, now: m(24) }, 510],
-  ['screen-dark.svg', 'vscode-dark', '#181818', inProgress, { files, signal: waiting, now: m(24) }, 570],
-  ['screen-summit.svg', 'vscode-light', '#F3F3F3', summit, { files, now: m(30) }, 630],
+  ['screen-light.svg', 'vscode-light', '#F3F3F3', inProgress, { files, stats, eta, now: m(24) }, 580],
+  ['screen-dark.svg', 'vscode-dark', '#181818', inProgress, { files, stats, eta, signal: waiting, now: m(24) }, 635],
+  ['screen-steer.svg', 'vscode-light', '#F3F3F3', planned, { steer: steering, now: m(0) }, 685],
+  ['screen-history.svg', 'vscode-light', '#F3F3F3', inProgress, { tab: 'history', history, now: m(24) }, 615],
 ];
 
 for (const [name, theme, bg, r, o, h] of variants) {
-  const html = render(r, o).replace('<style>', '<style>' + fontsCss);
+  // no script in a picture: the "This project" filter is drawn selected
+  const html = render(r, o).replace('<style>', '<style>' + fontsCss).replace('data-scope="here"', 'data-scope="here" aria-pressed="true"');
   const css = html.match(/<style>([\s\S]*)<\/style>/)[1]
     .replace('body.vscode-dark,body.vscode-high-contrast{', '.vscode-dark{')
     .replace('body{', '.page{');
-  const body = html.match(/<body>([\s\S]*)<\/body>/)[1];
+  const body = html.match(/<body>([\s\S]*)<\/body>/)[1].replace(/<input([^>]*)>/g, '<input$1/>'); // SVG is XML
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="340" height="${h}" viewBox="0 0 340 ${h}">` +
     `<foreignObject width="340" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" class="page ${theme}" ` +
     `style="height:${h}px;padding-top:14px;background:${bg};border-radius:18px"><style>${css}</style>${body}</div></foreignObject></svg>\n`;
@@ -51,12 +81,12 @@ for (const [name, theme, bg, r, o, h] of variants) {
   const t4 = tasks.map((t) => (t.id === '3' ? { ...t, status: 'completed', mtime: m(18) } : t.id === '4' ? { ...t, status: 'in_progress', activeForm: 'Writing the tests', mtime: m(18) } : t));
   const f4 = { ...files, 4: new Set(['/demo/test/settings.test.ts']) };
   const states = [
-    renderApp(inProgress, { files, now: m(16) }),
-    renderApp({ ...inProgress, tasks: t4, done: 3 }, { files: f4, now: m(19) }),
-    renderApp({ ...inProgress, tasks: t4, done: 3 }, { files: f4, signal: waiting, now: m(21) }),
-    renderApp(summit, { files: f4, now: m(30) }),
+    renderApp(inProgress, { files, stats, eta, now: m(16) }),
+    renderApp({ ...inProgress, tasks: t4, done: 3 }, { files: f4, stats, eta: eta / 2, now: m(19) }),
+    renderApp({ ...inProgress, tasks: t4, done: 3 }, { files: f4, stats, eta: eta / 2, signal: waiting, now: m(21) }),
+    renderApp(summit, { files: f4, stats, now: m(30) }),
   ];
-  const h = 640;
+  const h = 630;
   const css = render(null).match(/<style>([\s\S]*)<\/style>/)[1].replace('body{', '.page{') + `
 .page{position:relative;overflow:hidden}.state{position:absolute;top:14px;left:8px;right:14px;opacity:0;animation:demo 12s infinite}
 .e2{animation-delay:3s}.e3{animation-delay:6s}.e4{animation-delay:9s}

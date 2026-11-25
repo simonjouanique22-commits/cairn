@@ -17,6 +17,10 @@ for (const [sid, subject] of [['s1', 'Write <the> code'], ['s2', 'Older request'
   fs.writeFileSync(path.join(claude, 'tasks', sid, '1.json'), JSON.stringify({ id: '1', subject, status: sid === 's1' ? 'in_progress' : 'completed' }));
 }
 const old = new Date(Date.now() - 3 * 86400e3);
+fs.mkdirSync(path.join(claude, 'cairn', 'history'), { recursive: true });
+const t0 = Date.now() / 1000 - 600;
+fs.writeFileSync(path.join(claude, 'cairn', 'history', 'h1.json'), JSON.stringify({ cwd: project, roadmaps: [{ title: 'Kept roadmap',
+  start: t0, end: t0 + 300, steps: [{ id: '1', subject: 'Done step', status: 'completed', created: t0, ended: t0 + 300 }] }] }));
 fs.utimesSync(path.join(claude, 'tasks', 's2', '1.json'), old, old);
 
 const port = 4900 + Math.floor(Math.random() * 500);
@@ -48,13 +52,33 @@ const request = (route, { host = `127.0.0.1:${port}`, method = 'GET', body } = {
   let stream = await request('/events');
   assert(stream.data.startsWith('data: '), stream.data.slice(0, 80));
   let state = JSON.parse(stream.data.slice(6));
-  assert(state.html.includes('Write &lt;the&gt; code') && !state.html.includes('<the>') && state.html.includes('Log · 1'));
+  assert(state.html.includes('Write &lt;the&gt; code') && !state.html.includes('<the>') && state.html.includes('Now · 0/1'));
   assert.strictEqual(state.announcement, 'In progress: Write <the> code — 0/1 steps done');
 
   assert.strictEqual((await request('/action', { method: 'POST', body: JSON.stringify({ type: 'select', sid: 's2' }) })).status, 204);
   stream = await request('/events');
   state = JSON.parse(stream.data.slice(6));
   assert(state.html.includes('Older request') && state.html.includes('old roadmap'));
+
+  // history tab, then one past roadmap opened, ready to copy as Markdown
+  assert.strictEqual((await request('/action', { method: 'POST', body: JSON.stringify({ type: 'tab', tab: 'history' }) })).status, 204);
+  state = JSON.parse((await request('/events')).data.slice(6));
+  assert(state.html.includes('data-pick="h1:0"') && state.html.includes('Kept roadmap'));
+  await request('/action', { method: 'POST', body: JSON.stringify({ type: 'pick', id: 'h1:0' }) });
+  state = JSON.parse((await request('/events')).data.slice(6));
+  assert(state.html.includes('data-copy="### Kept roadmap') && state.html.includes('← History'));
+
+  // steering from the browser: open a note on step 1, send it; the hook will pass it on to Claude
+  await request('/action', { method: 'POST', body: JSON.stringify({ type: 'tab', tab: 'now' }) });
+  await request('/action', { method: 'POST', body: JSON.stringify({ type: 'select', sid: 's1' }) });
+  await request('/action', { method: 'POST', body: JSON.stringify({ type: 'compose', step: '1' }) });
+  state = JSON.parse((await request('/events')).data.slice(6));
+  assert(state.html.includes('class="composer"') && state.html.includes('data-step="1"'));
+  await request('/action', { method: 'POST', body: JSON.stringify({ type: 'steer', kind: 'note', step: '1', text: 'Use the existing client' }) });
+  const kept = JSON.parse(fs.readFileSync(path.join(claude, 'cairn', 'steer', 's1.json'), 'utf8'));
+  assert.deepStrictEqual(kept.items.map((i) => [i.kind, i.step, i.subject, i.text]), [['note', '1', 'Write <the> code', 'Use the existing client']]);
+  state = JSON.parse((await request('/events')).data.slice(6));
+  assert(!state.html.includes('class="composer"') && state.html.includes('NOTE FOR CLAUDE'));
 
   server.kill();
   fs.rmSync(home, { recursive: true, force: true });

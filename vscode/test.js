@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadRoadmap, loadSessions, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, announcement, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
+const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, stepStats, lineDiff, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cairn-'));
 const transcript = (sid) => path.join(home, 'projects', 'p-' + sid, sid + '.jsonl');
@@ -69,16 +69,25 @@ const r = { sid: 'aaa', done: 1, total: 2, cwd: '/work/<b>project</b>', mtime: D
   { id: '2', subject: '<img src=x onerror=alert(1)>', activeForm: 'Coding', status: 'in_progress', mtime: Date.now() - 5 * 60000 },
 ] };
 const html = render(r, { files: { 2: new Set(['/p/<script>.js']) }, signal: { kind: 'waiting', message: '<b>Bash</b>' },
-  pills: [r, { sid: 'zzz', done: 0, total: 3, mtime: Date.now() }], log: [{ sid: 'old', done: 2, total: 2, mtime: 0, tasks: [{ subject: 'Older' }] }] });
+  pills: [r, { sid: 'zzz', done: 0, total: 3, mtime: Date.now() }] });
 assert(!html.includes('<img') && !html.includes('<b>project') && !html.includes('<script>') && !html.includes('<b>Bash'), 'text must be escaped');
-assert(html.includes('<b>1</b><span>/2</span>') && html.includes('class="cur"') && html.includes('Coding') && html.includes('since ') && html.includes('· 5 min'));
-assert(html.includes('data-open="/p/&lt;script&gt;.js"') && html.includes('Claude is waiting for you') && html.includes('data-sid="zzz"') && html.includes('Log · 1'));
+assert(html.includes('<b>Step 2 of 2</b>') && html.includes('class="cur"') && html.includes('Coding') && html.includes('since ') && html.includes('· 5 min'));
+assert(html.includes('data-open="/p/&lt;script&gt;.js"') && html.includes('Claude is waiting for you') && html.includes('data-sid="zzz"'));
+// finished steps stay readable: highlighted, never struck through; the tabs say how far along the roadmap is
+assert(html.includes('<span class="t" data-k="t" title="A">A</span>') && html.includes('aria-pressed="true">Now · 1/2</button>'));
+// the trail: one stone per step, the current one ringed; the summit flag won once everything is done
+assert(html.includes('class="trail-map"') && html.includes('aria-label="Step 2 of 2 on the way to the summit"') && html.includes('class="ring"'));
+for (const n of [1, 2, 7, 15]) {
+  const svg = trail(Array.from({ length: n }, (_, i) => ({ id: String(i + 1), status: i < n / 2 ? 'completed' : 'pending' })), { here: 'h', summit: 's', onTrail: () => 'o', atStart: () => 'a' });
+  assert(!svg.includes('NaN') && (svg.match(/<circle/g) || []).length === n, `trail of ${n}`);
+}
+assert(trail([{ id: '1', status: 'completed' }], { summit: 'S' }).includes('class="peak won"'));
 const summit = { done: 1, total: 1, tasks: [{ id: '1', subject: 'A', status: 'completed', mtime: 1 }], mtime: 1 };
 assert(render(summit).includes('Summit reached') && render(summit).includes('old roadmap'));
 assert(render(null).includes('Nothing to mark yet') && render(null, { lang: 'fr' }).includes('Rien à baliser'));
 assert(renderApp(r, { lang: 'fr' }).includes('EN COURS') && renderApp(r, { lang: 'fr', signal: { kind: 'waiting' } }).includes('t&#39;attend'));
 // every direct child of a container updated piece by piece carries a data-k key
-for (const m of renderApp(r, { pills: [r, r], log: [] }).matchAll(/<(main|ol|header|nav|li|div class="(?:card|row|cardtop)")[^>]*>/g)) {
+for (const m of renderApp(r, { pills: [r, r] }).matchAll(/<(main|ol|header|nav|li|div class="(?:card|row|cardtop|cardfoot|hero|now[^"]*)")(?=[\s>])[^>]*>/g)) {
   assert(m[0].includes('data-k='), `missing key: ${m[0]}`);
 }
 
@@ -118,6 +127,83 @@ assert.strictEqual(announcement(r, null), 'In progress: Coding — 1/2 steps don
 assert.strictEqual(announcement(r, null, 'fr'), 'En cours : Coding — 1/2 étapes faites');
 assert.strictEqual(announcement(r, { kind: 'waiting', message: 'm' }), 'Claude is waiting for you: m');
 assert.strictEqual(announcement(null, null), '');
+
+// history kept by the hook: read, filtered by folder, listed by day, opened, copied as Markdown, shown wide in a tab
+const hdir = path.join(home, 'cairn', 'history');
+fs.mkdirSync(hdir, { recursive: true });
+const s0 = Date.now() / 1000 - 3600;
+fs.writeFileSync(path.join(hdir, 'hh.json'), JSON.stringify({ cwd: '/work/project-a', roadmaps: [
+  { title: 'Add a <dark> mode', start: s0, end: s0 + 600, steps: [
+    { id: '1', subject: 'Read the code', status: 'completed', created: s0, started: s0, ended: s0 + 240 },
+    { id: '2', subject: 'Write the screen', status: 'completed', created: s0, started: s0 + 240, ended: s0 + 600, files: ['/work/project-a/Settings.tsx'] },
+    { id: '3', subject: 'Dropped', status: 'deleted', created: s0 }] },
+  { title: 'Fix the login loop', start: s0 - 2 * 86400, end: s0 - 2 * 86400 + 300, steps: [
+    { id: '4', subject: 'Find the loop', status: 'completed', created: s0 - 2 * 86400, ended: s0 - 2 * 86400 + 300 },
+    { id: '5', subject: 'Fix it', status: 'pending', created: s0 - 2 * 86400 }] },
+  { title: 'Only dropped steps', start: s0, steps: [{ id: '6', subject: 'x', status: 'deleted', created: s0 }] }] }));
+fs.writeFileSync(path.join(hdir, 'other.json'), JSON.stringify({ cwd: '/work/project-b', roadmaps: [
+  { title: 'Elsewhere', start: s0 + 60, end: s0 + 120, steps: [{ id: '1', subject: 'y', status: 'completed', created: s0 + 60, ended: s0 + 120 }] }] }));
+fs.writeFileSync(path.join(hdir, 'broken.json'), '{');
+const hist = loadHistory(['/work/project-a'], home);
+assert.deepStrictEqual(hist.map((e) => [e.title, e.here, e.done, e.total]),
+  [['Add a <dark> mode', true, 2, 2], ['Elsewhere', false, 1, 1], ['Fix the login loop', true, 1, 2]]);
+assert.strictEqual(hist[0].steps[1].ended - hist[0].steps[1].started, 360_000);
+const list = renderApp(null, { tab: 'history', history: hist, lang: 'en' });
+assert(list.includes('Add a &lt;dark&gt; mode') && !list.includes('<dark>') && list.includes('data-pick="hh:0"') && list.includes('data-here="0"'));
+assert(list.includes('<h3 data-k="dh">today</h3>') && list.includes('stopped · 1/2') && list.includes('2/2 ✓') && list.includes('data-text="add a &lt;dark&gt; mode read the code write the screen settings.tsx"'));
+const opened = renderApp(null, { tab: 'history', history: hist, pick: 'hh:0', lang: 'en' });
+assert(opened.includes('data-pick=""') && opened.includes('6 min · <button data-open="/work/project-a/Settings.tsx"') && opened.includes('All files · 1') && !opened.includes('Fix the login loop'));
+assert.strictEqual(toMarkdown(hist[0], 'en').split('\n').slice(2).join('\n'), '\n- [x] Read the code — 4 min\n- [x] Write the screen — 6 min · `Settings.tsx`');
+assert(opened.includes(`data-copy="${'### Add a &lt;dark&gt; mode'}`));
+const tab = renderApp(null, { layout: 'tab', history: hist, pick: 'hh:0', lang: 'en' });
+assert(tab.includes('class="wide"') && tab.includes('this week · 3 roadmaps · 4 steps') && tab.includes('Fix the login loop') && tab.includes('class="long"') && tab.includes('data-period="7"'));
+assert(renderApp(null, { tab: 'history', history: [], lang: 'fr' }).includes('Aucune roadmap gardée'));
+
+// +/− per step, from Claude Code's copies before each step
+assert.deepStrictEqual(lineDiff('a\nb\nc', 'a\nc\nd\ne'), [2, 1]);
+const fh = path.join(home, 'file-history', 'ddd');
+fs.mkdirSync(fh, { recursive: true });
+fs.writeFileSync(path.join(fh, 'aaaa1111@v1'), 'x\ny\n');
+fs.writeFileSync(path.join(fh, 'bbbb2222@v2'), 'x\ny\nz\nw\n');
+assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }], tr, home), { 1: { add: 2, del: 0 }, 2: { add: 0, del: 0 } });
+const withStats = renderApp(r, { stats: { 1: { add: 38, del: 4 } } });
+assert(withStats.includes('<span class="add">+38</span> <span class="del">−4</span>'));
+assert(renderApp(r, { stats: { 1: { add: 0, del: 0 } } }).includes('no change'));
+// time left, from the median step of the history
+const timed = [{ steps: Array.from({ length: 5 }, () => ({ started: 0, ended: 60_000 })) }];
+assert.strictEqual(timeLeft({ total: 2, tasks: [{ status: 'in_progress' }, { status: 'pending' }] }, timed), 90_000);
+assert.strictEqual(timeLeft(r, []), 0);
+assert(renderApp(r, { eta: 12 * 60000 }).includes('~12 min to the summit'));
+
+// steering: the view writes the user's notes and edits; titles come from the roadmap; at most 10 waiting
+const tasks = [{ id: '7', subject: 'Write the screen' }, { id: '8', subject: 'Test it' }];
+assert.strictEqual(steer('../x', { kind: 'go' }, tasks, home), false);
+assert.strictEqual(steer('sv', { kind: 'remove', step: '99' }, tasks, home), false);
+assert.strictEqual(steer('sv', { kind: 'note', step: '99', text: 'x' }, tasks, home), false);
+assert.strictEqual(steer('sv', { kind: 'note', step: '7', text: '   ' }, tasks, home), false);
+assert(steer('sv', { kind: 'note', step: '7', text: 'Reuse\u0007the client', subject: 'forged' }, tasks, home));
+assert(steer('sv', { kind: 'remove', step: '8' }, tasks, home));
+assert(steer('sv', { kind: 'add', text: 'Update the docs' }, tasks, home));
+let sv = readSteer('sv', home);
+assert.deepStrictEqual(sv.items.map((i) => [i.kind, i.step, i.subject, i.text]),
+  [['note', '7', 'Write the screen', 'Reuse the client'], ['remove', '8', 'Test it', ''], ['add', '', '', 'Update the docs']]);
+if (process.platform !== 'win32') assert.strictEqual(fs.statSync(path.join(home, 'cairn', 'steer', 'sv.json')).mode & 0o777, 0o600);
+assert(steer('sv', { kind: 'cancel', id: sv.items[2].id }, tasks, home) && readSteer('sv', home).items.length === 2);
+assert(steer('sv', { kind: 'note', text: 'Smaller steps please', go: true }, tasks, home) && readSteer('sv', home).gate === 'go');
+for (let i = 0; i < 9; i++) steer('sv', { kind: 'add', text: `extra ${i}` }, tasks, home);
+assert.strictEqual(readSteer('sv', home).items.filter((i) => !i.sent).length, 10);
+// plan review: the plan waits for the user's go; steps can be noted, removed, added
+const planned = { sid: 'sv', done: 0, total: 2, mtime: Date.now(), tasks: tasks.map((x) => ({ ...x, status: 'pending' })) };
+const review = renderApp(planned, { steer: { gate: 'held', items: [
+  { id: 'n1', kind: 'note', step: '7', subject: 'Write the screen', text: 'Reuse the client', sent: false },
+  { id: 'r1', kind: 'remove', step: '8', subject: 'Test it', sent: false },
+  { id: 'a1', kind: 'add', text: 'Update the docs', sent: false }] }, composing: 'plan' });
+assert(review.includes('Claude has a plan · 2 steps') && review.includes('data-go="1"') && review.includes('class="now gate"'));
+assert(review.includes('NOTE FOR CLAUDE · at its next action') && review.includes('data-cancel="n1"') && review.includes('class="todo gone"'));
+assert(review.includes('data-k="ad-a1"') && review.includes('data-also-go="1"') && review.includes('<textarea name="text"'));
+assert(!review.includes('data-remove="8"') && review.includes('data-remove="7"') && review.includes('data-compose="add"'));
+const approved = renderApp(planned, { steer: { gate: 'go', items: [] }, canTerminal: true });
+assert(approved.includes('Approved · Claude has your go') && approved.includes('data-terminal="1"') && !approved.includes('data-go="1"'));
 
 // theme color contrasts (WCAG: 4.5 for body text, 3 for large text)
 const lum = (hex) => {

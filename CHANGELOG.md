@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.5.0
+
+- **Steer Claude from the roadmap.** Leave a note on a step, remove a step, add one: the hook passes it to Claude as
+  context at its next action, without stopping it (or before it ends its turn, or with the next prompt).
+- **Plan gate** (`cairn.planGate`, or `CAIRN_PLAN_GATE=1`): Claude stops after making its plan; you review and edit it in
+  the view, press **Let Claude go**, and the Stop hook hands Claude your go and your changes so it picks up at once
+  (it waits `CAIRN_GATE_WAIT` seconds, 600 by default; then any message, or the new `/cairn:go`, carries the go).
+- **The trail**: one stone per step on a winding path to the summit, "you are here" on the current step, and a rough
+  time left from your past roadmaps.
+- **+/− per step**: lines changed by each step, from Claude Code's copies before each step.
+- **Cool and clear**: one loud element (the step in progress), a calm list in the editor's font, thinner lines, and a
+  dark theme of its own (no light outlines, no pink shadows). Finished steps open to show their files.
+- History restyled to match; README screenshots now show the trail and the plan review.
+
+## 1.4.0
+
+- **History.** Claude Code clears its task list as it goes, so the hook now keeps every roadmap in
+  `~/.claude/cairn/history/` (title = first line of the request, step titles, statuses, times, file paths; readable by
+  you only; `CAIRN_HISTORY_DAYS`, 90 by default). In the view, a **History** tab lists them by day with a search and a
+  "this project / all projects" filter; a past roadmap opens with the time and files of each step and copies as
+  Markdown. **Cairn: Open the history** shows it wide in an editor tab, with the time per step. The old "Log" is gone.
+- **Finished steps stay readable**: highlighted like a ticked line on paper instead of struck through.
+- **Cleaner sheet**: thinner lines, smaller counter, slimmer progress bar, Now / History tabs.
+- **`/cairn:setup` checks the plugin copy Claude Code runs.** Claude Code copies a plugin when installing it, so an
+  older copy could keep running after an update; `--fix` updates it (`claude plugin update`). It also imports the
+  roadmaps still in Claude Code's transcripts into the history.
+- README: a History screenshot; visuals regenerated.
+
 ## 1.3.0
 
 - **English first.** Every view, message, command and doc is now in English by default; French stays as a translation

@@ -18,7 +18,7 @@ const FOLDER = (() => { try { return fs.realpathSync.native(path.resolve(raw)); 
 const FONTS = path.join(__dirname, '..', 'vscode', 'media', 'fonts');
 const HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 
-let chosen = null, sessions = [], last = '';
+let chosen = null, sessions = [], last = '', tab = 'now', pick = null, history = [], composing = null, current = null;
 const clients = new Set();
 
 // Files git sees as changed in the project (read-only command, no shell).
@@ -36,13 +36,16 @@ function state() {
   const latest = sessions[0];
   if (!sessions.some((s) => s.sid === chosen)) chosen = null;
   const r = sessions.find((s) => s.sid === chosen) || latest || null;
+  current = r;
   const tr = r ? cairn.traceOf(r.sid) : cairn.emptyTrace();
   const cmdFiles = r ? cairn.filesByCommand(r.tasks, tr, gitChanges(), now) : {};
   const signal = cairn.readSignal([FOLDER], cairn.CLAUDE_DIR, now);
   const active = sessions.filter((s) => now - s.mtime < 2 * 3600e3);
   const pills = active.length > 1 ? active : [];
-  const log = sessions.filter((s) => s.sid !== r?.sid && !pills.includes(s)).slice(0, 8);
-  return JSON.stringify({ type: 'state', html: cairn.renderApp(r, { files: tr.files, cmdFiles, signal, pills, log, latestSid: latest?.sid, now, lang: LANG }),
+  history = cairn.loadHistory([FOLDER]);
+  if (!history.some((e) => e.id === pick)) pick = null;
+  const steering = { stats: r ? cairn.stepStats(r.sid, r.tasks, tr) : {}, eta: cairn.timeLeft(r, history), steer: r ? cairn.readSteer(r.sid) : { items: [] }, composing };
+  return JSON.stringify({ type: 'state', html: cairn.renderApp(r, { files: tr.files, cmdFiles, signal, pills, now, lang: LANG, tab, pick, history, project: FOLDER, ...steering }),
     announcement: cairn.announcement(r, signal, LANG) });
 }
 
@@ -76,7 +79,12 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const m = JSON.parse(body);
-        if (m.type === 'select' && sessions.some((s) => s.sid === m.sid)) { chosen = m.sid; broadcast(true); }
+        if (m.type === 'select' && sessions.some((s) => s.sid === m.sid)) chosen = m.sid;
+        else if (m.type === 'tab' && (m.tab === 'now' || m.tab === 'history')) { tab = m.tab; pick = null; }
+        else if (m.type === 'pick') pick = history.some((e) => e.id === m.id) ? m.id : null;
+        else if (m.type === 'compose') composing = typeof m.step === 'string' && /^[\w-]{1,12}$/.test(m.step) ? m.step : null;
+        else if (m.type === 'steer' && current && cairn.steer(current.sid, m, current.tasks)) composing = null;
+        broadcast(true);
       } catch { /* ignored */ }
       res.writeHead(204, secure).end();
     });
