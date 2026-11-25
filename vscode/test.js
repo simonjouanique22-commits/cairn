@@ -178,6 +178,17 @@ const writes = ['cat > a.txt', 'echo x >> log', "python3 - <<'EOF'", 'sed -i "" 
 const reads = ['npm test 2>&1 | tail -3', 'grep -n x f > /dev/null', 'sed -n 1,9p f', 'git diff --stat', 'uv run pytest -q', 'ls -la', 'a && b || c'];
 assert(writes.every((c) => WRITES.test(c)) && !reads.some((c) => WRITES.test(c)), [...writes.filter((c) => !WRITES.test(c)), ...reads.filter((c) => WRITES.test(c))].join(' / '));
 assert(!renderApp(r, { stats: { 1: { add: 3, del: 0 } }, cmdFiles: { 1: new Set(['/x']) } }).includes('+3')); // partial: no numbers
+// every feature can be turned off in the settings
+const r3 = { ...r, total: 3, tasks: [...r.tasks, { id: '3', subject: 'Next', status: 'pending' }] };
+const full = { pills: [r3, r3], signal: { kind: 'waiting', message: 'm' }, eta: 600000, stats: { 1: { add: 3, del: 1 } }, files: { 1: new Set(['/w/a.js']) } };
+const on = renderApp(r3, full);
+assert(['trail-map', 'class="delta"', 'data-open="/w/a.js"', 'data-remove=', 'data-compose="add"', 'class="pills"', 'class="sticker', 'data-tab="history"', '~10 min'].every((x) => on.includes(x)));
+const off = renderApp(r3, { ...full, show: { trail: false, timeLeft: false, lines: false, files: false, steering: false, sessions: false, sticker: false, history: false } });
+assert(!['trail-map', 'class="delta"', 'data-open=', 'data-remove=', 'data-compose=', 'class="pills"', 'class="sticker', 'data-tab=', '~10 min'].some((x) => off.includes(x)), 'still shown when off');
+assert(off.includes('class="where"') && renderApp(r3, { show: { history: false }, tab: 'history' }).includes('class="steps"')); // no history tab: back to now
+const gated = renderApp(r3, { steer: { gate: 'waiting', items: [] }, show: { steering: false } });
+assert(gated.includes('data-go="1"') && !gated.includes('data-compose="plan"')); // the go stays
+
 // Claude settings for the hook: only those changed from their default; one put back to default is removed
 const cfgFile = path.join(home, 'cairn', 'config.json');
 fs.writeFileSync(cfgFile, JSON.stringify({ planGate: true, other: 'kept' }));

@@ -243,7 +243,7 @@ function loadHistory(folders = [], claudeDir = CLAUDE_DIR, max = 300) {
 // ---------- settings the hook reads ----------
 // ~/.claude/cairn/config.json holds the extension's Claude settings that differ from their default (a setting put back
 // to its default is removed, so the hook's default applies). Claude's environment variables still win over it.
-const HOOK_SETTINGS = ['requireRoadmap', 'threshold', 'planGate', 'gateWait', 'snapshots', 'historyDays'];
+const HOOK_SETTINGS = ['requireRoadmap', 'threshold', 'planGate', 'gateWait', 'snapshots', 'history', 'historyDays'];
 function writeHookConfig(values, claudeDir = CLAUDE_DIR) {
   const f = path.join(claudeDir, 'cairn', 'config.json');
   let cfg = {};
@@ -731,6 +731,9 @@ ${timebar}<ol class="trail" data-k="trail">${steps}</ol>
 <div class="filters">${scope}</div><div class="filters">${periods}</div></header><div class="cols" data-k="cols">${list}${detail}</div></div>`;
 }
 
+// Parts of the view the settings can turn off (cairn.trail, cairn.timeLeft…); all shown by default.
+const SHOW = { trail: true, timeLeft: true, lines: true, files: true, steering: true, sessions: true, sticker: true, history: true };
+
 // View content (elements tagged data-k: the page only replaces what changed, and animates what arrives; inside an
 // element, either every child has a key or none does).
 // o.layout "tab": the history alone, wide (editor tab). Otherwise the panel: Now / History tabs (o.tab).
@@ -739,17 +742,18 @@ function renderApp(r, o = {}) {
   if (o.layout === 'tab') return renderHistory(o, t, true);
   const { hour, date } = clock(t);
   const now = o.now ?? Date.now();
-  const tab = o.tab === 'history' ? 'history' : 'now';
+  const show = { ...SHOW, ...o.show };
+  const tab = o.tab === 'history' && show.history ? 'history' : 'now';
   const files = o.files || {};
   const cmdFiles = o.cmdFiles || {};
   const stats = o.stats || {};
   const sv = o.steer || { items: [] };
   const parts = [];
 
-  if (tab === 'now' && o.pills?.length > 1) {
+  if (tab === 'now' && show.sessions && o.pills?.length > 1) {
     parts.push(`<nav class="pills" data-k="pills">${o.pills.map((s) => `<button class="pill${s.sid === r?.sid ? ' on' : ''}" data-k="p-${esc(s.sid)}" data-sid="${esc(s.sid)}">${hour(s.mtime)} · ${s.done}/${s.total}</button>`).join('')}</nav>`);
   }
-  if (o.signal) {
+  if (o.signal && show.sticker) {
     const s = o.signal;
     parts.push(s.kind === 'waiting'
       ? `<div class="sticker blink" data-k="sig-w"><span>${esc(t.wait)}${s.message ? `<small>${esc(s.message)}</small>` : ''}</span></div>`
@@ -770,6 +774,7 @@ function renderApp(r, o = {}) {
     const cur = tasks.find((x) => x.status === 'in_progress');
     const pos = new Map(tasks.map((x, i) => [String(x.id), i + 1]));
     const fileChips = (id, inCard) => {
+      if (!show.files) return '';
       const direct = [...(files[id] || [])].map((p) => [p, '']);
       const others = [...(cmdFiles[id] || [])].map((p) => [p, 'cmd']);
       const shown = [...direct.slice(-4), ...others].slice(0, 4);
@@ -779,7 +784,7 @@ function renderApp(r, o = {}) {
       return `<div class="files" data-k="f${inCard ? 'c' : ''}">${chips}${count > 4 ? `<span>+${count - 4}</span>` : ''}</div>`;
     };
     const delta = (id) => {
-      const d = stats[id];
+      const d = show.lines && stats[id];
       if (!d || (!d.exact && cmdFiles[id]?.size)) return ''; // files changed by commands: not counted, so no numbers
       if (!d.add && !d.del) return `<span class="delta" data-k="dl">${esc(t.noChange)}</span>`;
       return `<span class="delta" data-k="dl"><span class="add">+${d.add}</span> <span class="del">−${d.del}</span></span>`;
@@ -792,7 +797,7 @@ function renderApp(r, o = {}) {
       const ph = id === 'add' ? t.addPh : id === 'plan' ? t.planPh : t.notePh;
       return `<form class="composer${free ? ` ${id}` : ''}" data-k="c-${esc(id)}" data-kind="${id === 'add' ? 'add' : 'note'}" data-step="${free ? '' : esc(id)}"${review && id === 'plan' ? ' data-also-go="1"' : ''}><textarea name="text" maxlength="500" aria-label="${esc(ph)}" placeholder="${esc(ph)}"></textarea><div><button type="button" class="btn small" data-compose="">${esc(t.cancel)}</button><button type="submit" class="btn small primary">${esc(t.send)}</button></div></form>`;
     };
-    const noteButton = (task, key) => `<button class="ic"${key ? ` data-k="${key}"` : ''} data-compose="${esc(task.id)}" title="${esc(t.note)}" aria-label="${esc(t.note)}: ${esc(task.subject)}">${NOTE_IC}</button>`;
+    const noteButton = (task, key) => !show.steering ? '' : `<button class="ic"${key ? ` data-k="${key}"` : ''} data-compose="${esc(task.id)}" title="${esc(t.note)}" aria-label="${esc(t.note)}: ${esc(task.subject)}">${NOTE_IC}</button>`;
     const steps = tasks.map((task) => {
       const k = `s${esc(task.id)}`;
       const tip = esc(task.description && task.description !== task.subject ? `${task.subject}\n\n${task.description}` : task.subject);
@@ -811,32 +816,32 @@ function renderApp(r, o = {}) {
       const gone = open.find((i) => i.kind === 'remove' && i.step === String(task.id));
       const acts = gone
         ? `<span class="acts" data-k="a"><button class="link" data-cancel="${esc(gone.id)}">${esc(t.undo)}</button></span>`
-        : `<span class="acts" data-k="a">${noteButton(task)}<button class="ic" data-remove="${esc(task.id)}" title="${esc(t.remove)}" aria-label="${esc(t.remove)}: ${esc(task.subject)}">${X_IC}</button></span>`;
+        : !show.steering ? '' : `<span class="acts" data-k="a">${noteButton(task)}<button class="ic" data-remove="${esc(task.id)}" title="${esc(t.remove)}" aria-label="${esc(t.remove)}: ${esc(task.subject)}">${X_IC}</button></span>`;
       const wait = task.blockedBy?.length ? `<span class="after" data-k="w">${esc(t.after)} #${task.blockedBy.map((b) => esc(pos.get(String(b)) ?? b)).join(', #')}</span>` : '';
       return `<li class="todo${gone ? ' gone' : ''}" data-k="${k}"><div class="row" data-k="row"><span class="st-ic" data-k="ic">${pos.get(String(task.id))}</span><span class="t" data-k="t" title="${tip}">${esc(task.subject)}</span>${wait}${acts}</div>${notesOf(task.id)}${composer(task.id)}</li>`;
     }).join('');
     const added = open.filter((i) => i.kind === 'add').map((i) => `<li class="todo added" data-k="ad-${esc(i.id)}"><div class="row" data-k="row"><span class="st-ic" data-k="ic">+</span><span class="t" data-k="t">${esc(i.text)}</span><span class="acts" data-k="a"><button class="link" data-cancel="${esc(i.id)}">${esc(t.undo)}</button></span></div></li>`).join('');
-    const addRow = complete ? '' : `<li class="addli" data-k="add">${o.composing === 'add' ? composer('add') : `<button class="addrow" data-k="ab" data-compose="add">${esc(t.addStep)}</button>`}</li>`;
+    const addRow = complete || !show.steering ? '' : `<li class="addli" data-k="add">${o.composing === 'add' ? composer('add') : `<button class="addrow" data-k="ab" data-compose="add">${esc(t.addStep)}</button>`}</li>`;
 
     const where = complete
       ? `<div class="summit" data-k="summit">${esc(t.summit)}</div><div class="chips" data-k="chips"><span class="chip">${esc(t.count(total))}</span><span class="chip fin">${esc(t.doneAt)} ${hour(Math.max(...tasks.map((x) => x.mtime || 0)))}</span></div>`
-      : review ? '' : `<div class="where" data-k="where"><b>${esc(cur ? t.stepOf(tasks.indexOf(cur) + 1, total) : t.doneOf(done, total))}</b><span>${esc(o.eta ? t.eta(duration(o.eta)) : `${Math.round((done / total) * 100)} %`)}</span></div>`;
+      : review ? '' : `<div class="where" data-k="where"><b>${esc(cur ? t.stepOf(tasks.indexOf(cur) + 1, total) : t.doneOf(done, total))}</b><span>${esc(o.eta && show.timeLeft ? t.eta(duration(o.eta)) : `${Math.round((done / total) * 100)} %`)}</span></div>`;
     const plan = review
       ? `<div class="sticker" data-k="gate"><span>${esc(t.planT(total))}</span></div><p class="lead" data-k="lead">${esc(t.planP)}</p>`
       : sv.gate === 'go'
         ? `<div class="sticker ok" data-k="gate"><span>${esc(t.approvedT)}</span></div><p class="lead" data-k="lead">${esc(t.approvedP)}</p>${o.canTerminal ? `<button class="btn small" data-k="term" data-terminal="1">${esc(t.openTerminal)}</button>` : ''}`
         : '';
     const planNotes = sv.items.filter((i) => i.kind === 'note' && !i.step && !i.sent).map(note).join('') + composer('plan');
-    const gobar = review ? `<div class="gobar" data-k="go"><button class="btn primary" data-go="1">${esc(t.go)}</button><button class="btn" data-compose="plan">${esc(t.rethink)}</button></div>` : '';
+    const gobar = review ? `<div class="gobar" data-k="go"><button class="btn primary" data-go="1">${esc(t.go)}</button>${show.steering ? `<button class="btn" data-compose="plan">${esc(t.rethink)}</button>` : ''}</div>` : '';
     const left = tasks.filter((x) => x.status === 'pending').length;
     const foot = complete ? `${STACK}<span class="foot" data-k="foot" style="align-self:center">${esc(t.full)}</span>`
       : review ? '' : `<span class="foot" data-k="foot">${esc(left ? t.stonesLeft(left) : t.foot)}</span>`;
     const old = stale ? `<span class="chip oldchip" data-k="old">${esc(t.old)} · ${esc(t.ago(now - r.mtime, date(r.mtime)))}</span>` : '';
-    body = `<div class="now${stale ? ' stale' : ''}${review ? ' gate' : ''}" data-k="now-${esc(r.sid)}">${old}${plan}<div class="hero" data-k="hero">${trail(tasks, t)}${where}</div>${planNotes}<ol class="steps" data-k="steps">${steps}${added}${addRow}</ol>${gobar}${foot}</div>`;
+    body = `<div class="now${stale ? ' stale' : ''}${review ? ' gate' : ''}" data-k="now-${esc(r.sid)}">${old}${plan}<div class="hero" data-k="hero">${show.trail ? trail(tasks, t) : ''}${where}</div>${planNotes}<ol class="steps" data-k="steps">${steps}${added}${addRow}</ol>${gobar}${foot}</div>`;
   }
   const project = r?.cwd || o.project;
   const proj = project ? `<span class="chip proj" title="${esc(project)}" data-k="proj">${esc(path.basename(project))}</span>` : '';
-  const tabs = `<nav class="tabs" data-k="tabs" aria-label="Cairn"><button data-tab="now" aria-pressed="${tab === 'now'}">${esc(t.now)}${r?.total ? ` · ${r.done}/${r.total}` : ''}</button><button data-tab="history" aria-pressed="${tab === 'history'}">${esc(t.history)}</button></nav>`;
+  const tabs = !show.history ? '' : `<nav class="tabs" data-k="tabs" aria-label="Cairn"><button data-tab="now" aria-pressed="${tab === 'now'}">${esc(t.now)}${r?.total ? ` · ${r.done}/${r.total}` : ''}</button><button data-tab="history" aria-pressed="${tab === 'history'}">${esc(t.history)}</button></nav>`;
   parts.push(`<main class="sheet" data-k="sheet"><header class="top" data-k="top">${MINI}<span class="word" data-k="w">cairn</span>${proj}</header>${tabs}${body}</main>`);
   return parts.join('');
 }
@@ -996,6 +1001,8 @@ function activate(context) {
     return {
       accent: hex(c.get('accent'), '#2B3BFF'), pop: hex(c.get('pop'), '#FF7AD9'),
       staleHours: Math.max(0.1, Number(c.get('staleHours', 2)) || 2), notifications: c.get('notifications', true) !== false,
+      statusBar: c.get('statusBar', true) !== false,
+      show: Object.fromEntries(Object.keys(SHOW).map((k) => [k, c.get(k, true) !== false])),
       lang: language === 'fr' || language === 'en' ? language : vscode.env.language.toLowerCase().startsWith('fr') ? 'fr' : 'en',
     };
   };
@@ -1040,7 +1047,7 @@ function activate(context) {
     const signal = readSignal(folders, CLAUDE_DIR, now);
     const active = sessions.filter((s) => now - s.mtime < c.staleHours * 3600e3);
     const shared = { files: tr.files, cmdFiles, signal, pills: active.length > 1 ? active : [], now, lang: c.lang,
-      staleHours: c.staleHours, history, project: folders[0], stats: r ? stepStats(r.sid, r.tasks, tr) : {},
+      staleHours: c.staleHours, show: c.show, history, project: folders[0], stats: r ? stepStats(r.sid, r.tasks, tr) : {},
       eta: timeLeft(r, history), steer: r ? readSteer(r.sid) : { items: [] }, canTerminal: true };
 
     for (const s of surfaces) {
@@ -1066,7 +1073,7 @@ function activate(context) {
         (cur ? ` · ${cur.activeForm || cur.subject}` : r.done === r.total ? ` · ${t.statusDone}` : '');
     }
     status.tooltip = r?.total ? t.tip + '\n' + r.tasks.map((x) => `${{ completed: '✓', in_progress: '▶' }[x.status] || '○'} ${x.id}. ${x.subject}`).join('\n') : t.tip;
-    if (signal || r?.total) status.show(); else status.hide();
+    if (c.statusBar && (signal || r?.total)) status.show(); else status.hide();
 
     if (signal?.kind === 'waiting' && c.notifications && !notified.has(signal.sid + signal.t)) {
       notified.add(signal.sid + signal.t);

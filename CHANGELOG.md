@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.0
+
+- **A checkbox for everything.** Each part of the view can be turned off in VS Code's settings: the trail, the time
+  left, the +/−, the files under each step, the steering buttons, the session pills, the "Claude is waiting"
+  sticker, the status bar item. And the history (`cairn.history`): off, the hook keeps only the current roadmap
+  and the History tab goes away.
+- Settings are grouped under *Claude* and *View*. If VS Code still lists only 5 Cairn settings, quit it (Cmd+Q) and
+  reopen it: a window reload can keep the old list of settings.
+
 ## 1.7.0
 
 - **Every setting in the editor.** VS Code now has two groups of settings, *Cairn: Claude* and *Cairn: view*, and a ⚙

@@ -67,6 +67,7 @@ THRESHOLD = setting(env("CAIRN_THRESHOLD") or env("CAIRN_SEUIL"), "threshold", 3
 ROOT = Path(__file__).resolve().parent.parent
 HISTORY = CLAUDE_DIR / "cairn" / "history"
 HISTORY_DAYS = setting(env("CAIRN_HISTORY_DAYS"), "historyDays", 90.0)  # how long roadmaps are kept
+KEEP_HISTORY = setting(env("CAIRN_HISTORY"), "history", True)  # off: only the current roadmap is kept
 WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 STEER = CLAUDE_DIR / "cairn" / "steer"
 GATE_WAIT = min(840.0, setting(env("CAIRN_GATE_WAIT"), "gateWait", 600.0))  # below the Stop hook's timeout (900 s)
@@ -370,6 +371,8 @@ def on_tool_done(evt, session):
     else:
         return
     h["cwd"] = evt.get("cwd") or h.get("cwd")
+    if not KEEP_HISTORY:
+        h["roadmaps"] = h["roadmaps"][-1:]  # the current one is still needed to follow it
     save_history(session, h)
 
 

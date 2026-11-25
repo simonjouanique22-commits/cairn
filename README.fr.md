@@ -117,7 +117,9 @@ Dans VS Code, le bouton ⚙ de la vue (ou Réglages → Cairn). Les réglages **
 | `cairn.planGate` · `CAIRN_PLAN_GATE=1` | désactivé | Claude s’arrête après avoir fait son plan, jusqu’à ton go depuis la vue. |
 | `cairn.gateWait` · `CAIRN_GATE_WAIT` | `600` | Secondes pendant lesquelles Claude attend ton go avant de simplement finir son tour (ensuite n’importe quel message, ou `/cairn:go`, le porte). |
 | `cairn.snapshots` · `CAIRN_SNAPSHOTS` | activé | +/− exact par étape grâce aux instantanés git (voir Confidentialité) ; désactivé, seules les modifications de Claude sont comptées. |
+| `cairn.history` · `CAIRN_HISTORY` | activé | Garder les roadmaps passées (onglet Historique) ; désactivé, seule la roadmap en cours est gardée. |
 | `cairn.historyDays` · `CAIRN_HISTORY_DAYS` | `90` | Durée de conservation des roadmaps passées. |
+| `cairn.trail` · `cairn.timeLeft` · `cairn.lines` · `cairn.files` · `cairn.steering` · `cairn.sessions` · `cairn.sticker` · `cairn.statusBar` (VS Code) | activé | Une case par partie de la vue : le sentier, le temps restant, le +/−, les fichiers sous chaque étape, les boutons note / retirer / ajouter, les pastilles de sessions, l’autocollant « Claude t’attend », l’élément de la barre d’état. |
 | `cairn.accent` · `cairn.pop` (VS Code) | bleu · rose | Couleurs de l’étape en cours et des autocollants. |
 | `cairn.staleHours` (VS Code) | `2` | Au-delà, une roadmap est grisée comme ancienne. |
 | `cairn.notifications` (VS Code) | activé | Notification quand Claude t’attend. |

@@ -11,11 +11,20 @@
   "config.notifications": "Notification VS Code quand Claude attend une autorisation ou une réponse.",
   "config.planGate": "Claude s'arrête après avoir fait son plan, jusqu'à ton go depuis la roadmap (avec tes changements et tes notes).",
   "config.language": "Langue de la vue (auto : celle de VS Code).",
-  "config.claude": "Cairn : Claude",
-  "config.view": "Cairn : vue",
+  "config.claude": "Claude",
+  "config.view": "Vue",
   "config.requireRoadmap": "Sur une grosse demande, Claude doit faire sa roadmap avant d'aller plus loin (il est arrêté une fois, avec la raison).",
   "config.threshold": "Nombre d'actions permises à Claude sur une demande avant d'exiger la roadmap.",
   "config.gateWait": "Avec la validation du plan, combien de temps Claude attend ton go (secondes) avant de simplement finir son tour ; ensuite n'importe quel message, ou /cairn:go, porte le go.",
   "config.snapshots": "+/− exact par étape : dans un dépôt git, des instantanés du projet à chaque étape, gardés une semaine dans ~/.claude/cairn/objects (ton dépôt n'est jamais modifié). Désactivé : seules les modifications de Claude sont comptées.",
-  "config.historyDays": "Durée de conservation des roadmaps passées (jours)."
+  "config.historyDays": "Durée de conservation des roadmaps passées (jours).",
+  "config.history": "Garder les roadmaps passées (onglet Historique). Désactivé : seule la roadmap en cours est gardée, et l'onglet est masqué.",
+  "config.trail": "Afficher le sentier : un caillou par étape jusqu'au sommet.",
+  "config.timeLeft": "Afficher le temps restant estimé jusqu'au sommet (sinon le pourcentage).",
+  "config.lines": "Afficher les lignes changées par chaque étape (+/−).",
+  "config.files": "Afficher les fichiers touchés sous chaque étape.",
+  "config.steering": "Afficher les boutons pour laisser une note, retirer ou ajouter une étape.",
+  "config.sessions": "Afficher les pastilles pour passer d'une session de Claude à l'autre dans le même dossier.",
+  "config.sticker": "Afficher l'autocollant « Claude t'attend » dans la vue.",
+  "config.statusBar": "Afficher Cairn dans la barre d'état."
 }

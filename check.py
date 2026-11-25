@@ -260,6 +260,11 @@ if shutil.which("git"):
     cfg.write_text(json.dumps({"snapshots": False}))
     done("c4", "TaskUpdate", cwd=str(repo), tool_input={"taskId": "1", "status": "in_progress"})
     assert not (tmp / "claude" / "cairn" / "snaps" / "c4.json").exists()
+cfg.write_text(json.dumps({"history": False}))  # history off: only the current roadmap is kept
+for i in ("1", "2"):
+    done("c6", "TaskCreate", tool_input={"subject": i}, tool_response={"task": {"id": i}})
+    done("c6", "TaskUpdate", tool_input={"taskId": i, "status": "completed"})
+assert [[s["id"] for s in r["steps"]] for r in json.loads((hist.parent / "c6.json").read_text())["roadmaps"]] == [["2"]]
 cfg.write_text("{not json")  # a broken file: the defaults
 hook("UserPromptSubmit", session_id="c5")
 assert [hook("PreToolUse", session_id="c5", **WRITE)[0] for _ in range(3)] == [0, 0, 2]

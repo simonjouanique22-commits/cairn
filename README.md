@@ -117,7 +117,9 @@ In VS Code, the ⚙ button of the view (or Settings → Cairn). The **Claude** s
 | `cairn.planGate` · `CAIRN_PLAN_GATE=1` | off | Claude stops after making its plan, until you say go from the view. |
 | `cairn.gateWait` · `CAIRN_GATE_WAIT` | `600` | Seconds Claude waits for your go before simply ending its turn (then any message, or `/cairn:go`, carries it). |
 | `cairn.snapshots` · `CAIRN_SNAPSHOTS` | on | Exact +/− per step from git snapshots (see Privacy); off, only Claude's own edits are counted. |
+| `cairn.history` · `CAIRN_HISTORY` | on | Keep past roadmaps (History tab); off, only the current one is kept. |
 | `cairn.historyDays` · `CAIRN_HISTORY_DAYS` | `90` | How long past roadmaps are kept. |
+| `cairn.trail` · `cairn.timeLeft` · `cairn.lines` · `cairn.files` · `cairn.steering` · `cairn.sessions` · `cairn.sticker` · `cairn.statusBar` (VS Code) | on | One checkbox per part of the view: the trail, the time left, the +/−, the files under each step, the note / remove / add buttons, the session pills, the "Claude is waiting" sticker, the status bar item. |
 | `cairn.accent` · `cairn.pop` (VS Code) | blue · pink | Colors of the step in progress and of the stickers. |
 | `cairn.staleHours` (VS Code) | `2` | Past this, a roadmap is greyed out as old. |
 | `cairn.notifications` (VS Code) | on | Notification when Claude is waiting for you. |
