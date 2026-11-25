@@ -164,7 +164,7 @@ assert(tab.includes('class="wide"') && tab.includes('this week · 3 roadmaps · 
 assert(renderApp(null, { tab: 'history', history: [], lang: 'fr' }).includes('Aucune roadmap gardée'));
 
 // +/− per step, counted from the edits' results (an edit whose text mentions those markers is still an edit)
-assert.deepStrictEqual([...tr.files['1']], ['/work/project-d/src/a.js']);
+assert.deepStrictEqual([...tr.files['1']], [path.normalize('/work/project-d/src/a.js')]);
 assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }, { id: '3' }], tr), { 1: { add: 4, del: 1 }, 2: { add: 0, del: 0 } });
 // step 2 runs tests: no false "no change"; then a script that writes: its numbers would be partial, so none
 fs.appendFileSync(transcript('ddd'), line(t0 + 70_000, 'Bash', { command: 'npm test 2>&1 | tail -3 > /dev/null' }) + '\n');
