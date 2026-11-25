@@ -286,12 +286,18 @@ function steer(sid, action, tasks = [], claudeDir = CLAUDE_DIR) {
 
 // ---------- +/− per step ----------
 
-// +/− of each step of a roadmap: the lines Claude's edits added and removed while it was in progress. No entry (the
-// view shows the time) when a command or subagent may have written files too: they are not counted. { add: 0, del: 0 }
-// only when the step neither edited nor ran anything. ponytail: a line edited twice counts twice
-function stepStats(sid, tasks, tr) {
+// +/− of each step of a roadmap. Exact (whoever wrote the files) from the hook's snapshots of the working tree,
+// ~/.claude/cairn/snaps/<session>.json, in a git repository. Otherwise the lines Claude's edits added and removed
+// while it was in progress; no entry (the view shows the time) when a command or subagent may have written files
+// too, and { add: 0, del: 0 } only when the step neither edited nor ran anything. ponytail: there, a line edited
+// twice counts twice
+function stepStats(sid, tasks, tr, claudeDir = CLAUDE_DIR) {
   const out = {};
+  let snaps = {};
+  try { snaps = JSON.parse(fs.readFileSync(path.join(claudeDir, 'cairn', 'snaps', `${sid}.json`), 'utf8')).steps || {}; } catch { /* none */ }
   for (const task of tasks) {
+    const sn = snaps[String(task.id)];
+    if (Number.isInteger(sn?.add) && Number.isInteger(sn?.del)) { out[task.id] = { add: sn.add, del: sn.del, exact: true }; continue; }
     if (!tr.start[task.id] || tr.wrote[task.id]) continue;
     if (tr.delta[task.id]) out[task.id] = { ...tr.delta[task.id] };
     else if (!tr.files[task.id]?.size && !tr.ran[task.id]) out[task.id] = { add: 0, del: 0 };
@@ -757,7 +763,7 @@ function renderApp(r, o = {}) {
     };
     const delta = (id) => {
       const d = stats[id];
-      if (!d || cmdFiles[id]?.size) return ''; // files changed by commands: not counted, so no numbers
+      if (!d || (!d.exact && cmdFiles[id]?.size)) return ''; // files changed by commands: not counted, so no numbers
       if (!d.add && !d.del) return `<span class="delta" data-k="dl">${esc(t.noChange)}</span>`;
       return `<span class="delta" data-k="dl"><span class="add">+${d.add}</span> <span class="del">−${d.del}</span></span>`;
     };
@@ -1110,7 +1116,7 @@ function activate(context) {
   const schedule = () => { clearTimeout(timer); timer = setTimeout(refresh, 150); };
   const watchers = {};
   const watch = () => {
-    for (const dir of ['tasks', ...['state', 'history', 'steer'].map((d) => path.join('cairn', d))].map((d) => path.join(CLAUDE_DIR, d))) {
+    for (const dir of ['tasks', ...['state', 'history', 'steer', 'snaps'].map((d) => path.join('cairn', d))].map((d) => path.join(CLAUDE_DIR, d))) {
       if (watchers[dir]) continue;
       try {
         watchers[dir] = fs.watch(dir, { recursive: true }, schedule);

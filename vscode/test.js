@@ -178,6 +178,11 @@ const writes = ['cat > a.txt', 'echo x >> log', "python3 - <<'EOF'", 'sed -i "" 
 const reads = ['npm test 2>&1 | tail -3', 'grep -n x f > /dev/null', 'sed -n 1,9p f', 'git diff --stat', 'uv run pytest -q', 'ls -la', 'a && b || c'];
 assert(writes.every((c) => WRITES.test(c)) && !reads.some((c) => WRITES.test(c)), [...writes.filter((c) => !WRITES.test(c)), ...reads.filter((c) => WRITES.test(c))].join(' / '));
 assert(!renderApp(r, { stats: { 1: { add: 3, del: 0 } }, cmdFiles: { 1: new Set(['/x']) } }).includes('+3')); // partial: no numbers
+// exact numbers from the hook's snapshots win, whatever wrote the files
+fs.mkdirSync(path.join(home, 'cairn', 'snaps'), { recursive: true });
+fs.writeFileSync(path.join(home, 'cairn', 'snaps', 'ddd.json'), JSON.stringify({ cur: '2', steps: { 2: { start: 'a', end: 'b', add: 12, del: 3 } } }));
+assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }], traceOf('ddd', home), home), { 1: { add: 4, del: 1 }, 2: { add: 12, del: 3, exact: true } });
+assert(renderApp(r, { stats: { 1: { add: 3, del: 0, exact: true } }, cmdFiles: { 1: new Set(['/x']) } }).includes('+3'));
 const withStats = renderApp(r, { stats: { 1: { add: 38, del: 4 } } });
 assert(withStats.includes('<span class="add">+38</span> <span class="del">−4</span>'));
 assert(renderApp(r, { stats: { 1: { add: 0, del: 0 } } }).includes('no change'));

@@ -9,7 +9,9 @@ PreToolUse       -> on the THRESHOLD-th action (a write, or a command that chang
 Notification     -> Claude is waiting for the user (permission, answer): writes ~/.claude/cairn/state/<session>.json.
 Stop             -> Claude finished its turn: same file, so the editor can say so.
 PostToolUse      -> history: each TaskCreate / TaskUpdate (and the files written during a step) goes into
-                    ~/.claude/cairn/history/<session>.json, which outlives Claude Code's own task list.
+                    ~/.claude/cairn/history/<session>.json, which outlives Claude Code's own task list. And +/−: at
+                    each step change and after each action during a step, a git snapshot of the working tree, so
+                    the lines each step changed are known whatever wrote them (see "+/− per step" below).
 Steering         -> the editor view writes the user's notes and edits on the roadmap to ~/.claude/cairn/steer/
                     <session>.json. They reach Claude without stopping it: as context at its next action, before it
                     ends its turn (Stop hook), or with the next prompt. With the plan gate on (CAIRN_PLAN_GATE=1 or
@@ -21,9 +23,12 @@ Steering         -> the editor view writes the user's notes and edits on the roa
 On recent models, TaskCreate/TaskUpdate only exist when CLAUDE_CODE_ENABLE_TODO_TOOLS=1: without it, the plugin warns
 and never blocks. An internal error never blocks either.
 """
+import hashlib
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -42,6 +47,10 @@ WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 STEER = CLAUDE_DIR / "cairn" / "steer"
 GATE_WAIT = min(840.0, float(os.environ.get("CAIRN_GATE_WAIT") or "600"))  # below the Stop hook's timeout (900 s)
 CONFIG = CLAUDE_DIR / "cairn" / "config.json"
+SNAPS = CLAUDE_DIR / "cairn" / "snaps"
+OBJECTS = CLAUDE_DIR / "cairn" / "objects"
+SNAP_DAYS = 7  # snapshots (copies of the changed files) are deleted after a week without use
+BIG = 2_000_000  # bytes: a changed file this large stays out of the snapshots, and of the counts
 WARNING = (
     'Cairn is inactive: Claude Code task tools are disabled. Run /cairn:setup, or add '
     '"env": { "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } to ~/.claude/settings.json, then restart Claude.'
@@ -219,6 +228,90 @@ def prune_history(now):
         pass
 
 
+# ---------- +/− per step ----------
+# A snapshot is a git tree of the working tree (tracked and untracked files, .gitignore respected) written to Cairn's
+# own object store, ~/.claude/cairn/objects/<repository>/, which reads the repository's objects through git
+# "alternates": the repository itself is never written to. The lines a step added and removed are the diff between
+# its first snapshot and its last one, whoever wrote the files (Claude's edits, scripts, commands, subagents).
+# ~/.claude/cairn/snaps/<session>.json = {"cur": step in progress, "steps": {step: {"start", "end", "add", "del"}}}.
+
+def git(cwd, *args, env=None):
+    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       env=env, timeout=15)
+    if r.returncode:
+        raise OSError(r.stderr.strip()[:200])
+    return r.stdout
+
+
+def snapshot(cwd):
+    """(tree, top, env) of the working tree as it is now; None outside a git repository or when git fails."""
+    try:
+        top, gitdir = git(cwd, "rev-parse", "--show-toplevel", "--absolute-git-dir").splitlines()[:2]
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    store = OBJECTS / hashlib.sha1(top.encode("utf-8")).hexdigest()[:16]
+    store.mkdir(parents=True, exist_ok=True)
+    os.chmod(store.parent, 0o700)
+    index = store / f"index-{os.getpid()}"
+    env = {**os.environ, "GIT_INDEX_FILE": str(index), "GIT_OBJECT_DIRECTORY": str(store),
+           "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.path.join(gitdir, "objects")}
+    try:
+        real = Path(top) / git(top, "rev-parse", "--git-path", "index").strip()
+        if real.exists():
+            shutil.copyfile(real, index)  # a copy of the user's index: its stat cache, so only changed files are read
+        changed = git(top, "status", "--porcelain", "-z", "--untracked-files=all", "--no-renames", env=env)
+        big = [p for p in (e[3:] for e in changed.split("\0") if len(e) > 3)
+               if os.path.isfile(os.path.join(top, p)) and os.path.getsize(os.path.join(top, p)) > BIG]
+        if len(big) > 200:  # ponytail: a folder of large generated files, not counted at all
+            return None
+        git(top, "add", "-A", "--", ".", *(f":(exclude,literal){p}" for p in big), env=env)
+        return git(top, "write-tree", env=env).strip(), top, env
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    finally:
+        index.unlink(missing_ok=True)
+
+
+def count_lines(evt, session):
+    """Snapshot at a step's start, then after each action and at its end: its +/− so far."""
+    tool, inp = evt.get("tool_name"), evt.get("tool_input") or {}
+    f = SNAPS / f"{session}.json"
+    s = load_json(f, {})
+    status = inp.get("status") if tool == "TaskUpdate" else None
+    tid = str(inp.get("taskId")) if tool == "TaskUpdate" else s.get("cur")
+    if tool == "TaskUpdate" and status not in ("in_progress", "completed") or not tid:
+        return
+    step = s.setdefault("steps", {}).setdefault(tid, {})
+    if status != "in_progress" and "start" not in step:  # not followed since it started
+        return
+    snap = snapshot(evt.get("cwd") or os.getcwd())
+    if not snap:
+        return
+    tree, top, env = snap
+    if status == "in_progress":
+        step.setdefault("start", tree)
+        s["cur"] = tid
+    else:
+        add = rem = 0
+        for line in git(top, "diff-tree", "-r", "--numstat", step["start"], tree, env=env).splitlines():
+            a, d = (line.split("\t") + ["", ""])[:2]
+            if a.isdigit() and d.isdigit():  # "-" for binary files
+                add, rem = add + int(a), rem + int(d)
+        step.update(end=tree, add=add, **{"del": rem})
+        if status == "completed" and s.get("cur") == tid:
+            s["cur"] = None
+    save_private(f, s)
+
+
+def prune_snapshots(now):
+    try:
+        for d in [*OBJECTS.glob("*"), *SNAPS.glob("*.json")]:
+            if now - d.stat().st_mtime > SNAP_DAYS * 86400:
+                shutil.rmtree(d) if d.is_dir() else d.unlink()
+    except OSError:
+        pass
+
+
 def created_id(response, session):
     """Id of the task TaskCreate just made: from its result, else the highest task file of the session."""
     if isinstance(response, dict) and isinstance(response.get("task"), dict) and response["task"].get("id"):
@@ -268,6 +361,7 @@ def main():
         return 0
     if name == "SessionStart":
         prune_history(time.time())
+        prune_snapshots(time.time())
         out = ({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": RULE}} if ENABLED
                else {"systemMessage": WARNING})
         print(json.dumps(out, ensure_ascii=False))
@@ -282,6 +376,10 @@ def main():
         return 0
     if name == "PostToolUse":
         on_tool_done(evt, session)
+        try:
+            count_lines(evt, session)
+        except (OSError, ValueError, subprocess.SubprocessError):
+            pass
 
     steer_f = STEER / f"{session}.json"
     steer = load_json(steer_f, {})

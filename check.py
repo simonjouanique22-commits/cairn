@@ -1,6 +1,7 @@
 """python3 check.py — checks the hooks against fake events, without running Claude."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -134,6 +135,34 @@ if os.name != "nt":
 # a session without any roadmap leaves no history file
 done("h2", "Write", tool_input={"file_path": "/p/x.ts"})
 assert not (hist.parent / "h2.json").exists()
+
+# +/− per step: git snapshots of the working tree in Cairn's own store, whoever writes; the repository gets nothing
+if shutil.which("git"):
+    repo = tmp / "repo"
+    repo.mkdir()
+    g = lambda *a: subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "-c", "core.autocrlf=false", *a],
+                                  cwd=repo, capture_output=True, text=True, check=True).stdout
+    g("init", "-q")
+    (repo / "a.txt").write_bytes(b"1\n2\n3\n")
+    g("add", "a.txt")
+    g("commit", "-qm", "a")
+    snaps = tmp / "claude" / "cairn" / "snaps" / "g1.json"
+    step = lambda status: done("g1", "TaskUpdate", cwd=str(repo), tool_input={"taskId": "1", "status": status})
+    count = lambda: (lambda s: (s["cur"], s["steps"]["1"]["add"], s["steps"]["1"]["del"]))(json.loads(snaps.read_text()))
+    step("in_progress")
+    (repo / "a.txt").write_bytes(b"1\n3\n4\n5\n")  # +2 -1, by a script
+    (repo / "b.txt").write_bytes(b"x\ny\nz\n")  # new, untracked: +3
+    (repo / "big.bin").write_bytes(b"\n" * 2_000_001)  # too large: left out
+    done("g1", "Bash", cwd=str(repo), tool_input={"command": "python3 gen.py"})
+    assert count() == ("1", 5, 1), count()
+    blob = g("hash-object", "b.txt").strip()
+    assert subprocess.run(["git", "cat-file", "-e", blob], cwd=repo, capture_output=True).returncode != 0
+    g("add", "a.txt", "b.txt")
+    g("commit", "-qm", "b")  # Claude commits during the step: the count does not change
+    step("completed")
+    assert count() == (None, 5, 1), count()
+    done("g2", "TaskUpdate", cwd=str(tmp), tool_input={"taskId": "1", "status": "in_progress"})  # not a repository
+    assert not (snaps.parent / "g2.json").exists()
 # old histories are removed at session start
 old = hist.parent / "old.json"
 old.write_text("{}")

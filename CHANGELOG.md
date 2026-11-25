@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0
+
+- **Exact +/− per step, whoever writes.** In a git repository, the hook takes a snapshot of the working tree when a
+  step starts, after each action, and when it ends; a step's +/− is the diff between them. Changes made by scripts,
+  commands or subagents now count, commits during a step do not disturb it, and the step in progress shows its
+  numbers live. Snapshots go to Cairn's own git store (`~/.claude/cairn/objects/`, private, deleted after a week
+  without use), reading the repository's objects without ever writing to it; `.gitignore` is respected and files over
+  2 MB are left out. Outside git, 1.5.2's counting of Claude's edits remains.
+- The hook now also runs after commands and subagents (PostToolUse), to take those snapshots.
+
 ## 1.5.3
 
 - **The trail stays in one piece.** A step Claude added later and already finished used to sit after the steps still to
