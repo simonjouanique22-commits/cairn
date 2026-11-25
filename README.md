@@ -127,7 +127,7 @@ Turn the plugin off: `claude plugin disable cairn@cairn-local`.
 
 - **Nothing leaves your machine.** No network calls, no dependencies: plain Python and Node. The universal view only listens on `127.0.0.1` and refuses requests addressed to any other name.
 - **Reads the minimum.** Claude Code's task files; in transcripts, only the launch folder, step changes, the *paths* of written files and the references of the "before" backups. The backups themselves are only read for the diff you open, read-only.
-- **Keeps the minimum.** For each roadmap: the first line of the request that started it (its title), step titles, statuses, times and file paths — never the rest of the conversation. In `~/.claude/cairn/history/`, readable by you only, deleted after 90 days; delete the folder to forget everything.
+- **Keeps the minimum.** For each roadmap: step titles, statuses, times and file paths — never the conversation. (Versions 1.4 to 1.5.0 also kept the first line of your request; it is no longer shown and goes with the 90-day cleanup.) In `~/.claude/cairn/history/`, readable by you only, deleted after 90 days; delete the folder to forget everything.
 - **Writes the minimum.** That history, a small state file per session in `~/.claude/cairn/` ("waiting", "done", "paused"), your notes and edits for Claude in `~/.claude/cairn/steer/` (readable by you only), and a counter in the temp folder.
 - **Steering stays yours.** A note reaches Claude as context, capped at 500 characters, cleaned of control characters, and clearly labelled as coming from you through Cairn; step titles are taken from the roadmap, never from the page. Nothing is sent anywhere else.
 - **Locked-down view.** One script, its own, allowed by nonce; no external resource — the brand fonts are embedded; task text is escaped; only files found in the transcript or by git can be opened with a click.
@@ -174,7 +174,7 @@ Releasing: update `CHANGELOG.md` and the version numbers, then push a `vX.Y.Z` t
 - On older models, where the tools exist without the variable, the fallback blocking stays inactive.
 - The "before the step" diff relies on Claude Code's backups; without one, it falls back to the git diff (since the last commit).
 - The embedded fonts cover the Latin alphabet; other scripts use the system fonts.
-- The history starts with version 1.4; `/cairn:setup` brings back what Claude Code's transcripts still hold (about 30 days). A roadmap is titled after the request that started it: a short follow-up ("ok, go on") keeps the previous title, and the line of steps under it tells them apart.
+- The history starts with version 1.4; `/cairn:setup` brings back what Claude Code's transcripts still hold (about 30 days). A roadmap is named after its first step.
 - The plan gate waits for your go at most `CAIRN_GATE_WAIT` seconds (10 min by default); <kbd>Esc</kbd> in Claude Code stops the wait. A note arrives at Claude's next action: an action already running is not interrupted. Steps cannot be reordered yet.
 - The Vim panel shows the roadmap, not the history or the steering.
 - Interface languages: English and French. Adding one takes a `T` entry in `vscode/extension.js`, a `package.nls.<lang>.json` file and an `s:T` entry in the Vim plugin.

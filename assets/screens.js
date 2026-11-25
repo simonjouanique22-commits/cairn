@@ -21,7 +21,7 @@ const inProgress = { sid: 'demo', tasks, done: 2, total: 5, cwd: '/demo/my-proje
 const summit = { sid: 'demo', tasks: tasks.map((t, i) => ({ ...t, status: 'completed', mtime: m(i * 6) })), done: 5, total: 5, cwd: '/demo/my-project' };
 const waiting = { kind: 'waiting', message: 'Claude needs your permission to use Bash' };
 // fictitious history, as the hook keeps it (see loadHistory)
-const roadmap = (id, title, start, steps, stopped) => {
+const roadmap = (id, start, steps, stopped) => {
   let at = start;
   const list = steps.map(([subject, min, files = []], i) => {
     const done = !stopped || i < stopped;
@@ -29,15 +29,15 @@ const roadmap = (id, title, start, steps, stopped) => {
     if (done) at += min * 60000;
     return s;
   });
-  return { id, sid: id, cwd: '/demo/my-project', here: true, title, start, end: at, steps: list, done: list.filter((x) => x.status === 'completed').length, total: list.length };
+  return { id, sid: id, cwd: '/demo/my-project', here: true, start, end: at, steps: list, done: list.filter((x) => x.status === 'completed').length, total: list.length };
 };
 const history = [
-  roadmap('a', 'Add a dark mode to the settings screen', m(-30), [['Read the theme and settings code', 4], ['Add the dark palette tokens', 5, ['/demo/src/tokens.css']],
+  roadmap('a', m(-30), [['Read the theme and settings code', 4], ['Add the dark palette tokens', 5, ['/demo/src/tokens.css']],
     ['Wire the theme switch into the settings screen', 9, ['/demo/src/Settings.tsx', '/demo/src/useTheme.ts']], ['Remember the choice for each user', 6, ['/demo/src/prefs.ts']],
     ['Write the tests', 8, ['/demo/test/theme.test.ts']], ['Update the docs', 4, ['/demo/README.md']]]),
-  roadmap('b', 'Fix the login redirect loop', m(-195), [['Reproduce the loop', 5], ['Find the faulty redirect', 6, ['/demo/src/auth.ts']], ['Fix it and add a test', 7, ['/demo/test/auth.test.ts']]]),
-  roadmap('c', 'Write the release notes for 2.4', m(-1263), [['List the merged changes', 3], ['Draft the notes', 4, ['/demo/CHANGELOG.md']], ['Proofread', 1]]),
-  roadmap('d', 'Move the CI to the new runners', m(-1355), [['Read the current workflows', 6], ['Switch the test job', 12, ['/demo/.github/workflows/tests.yml']],
+  roadmap('b', m(-195), [['Reproduce the loop', 5], ['Find the faulty redirect', 6, ['/demo/src/auth.ts']], ['Fix it and add a test', 7, ['/demo/test/auth.test.ts']]]),
+  roadmap('c', m(-1263), [['List the merged changes', 3], ['Draft the notes', 4, ['/demo/CHANGELOG.md']], ['Proofread', 1]]),
+  roadmap('d', m(-1355), [['Read the current workflows', 6], ['Switch the test job', 12, ['/demo/.github/workflows/tests.yml']],
     ['Switch the release job', 9], ['Clean up the old runners', 5]], 2),
 ];
 

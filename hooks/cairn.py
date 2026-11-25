@@ -104,14 +104,9 @@ def write(f, content):
 
 
 # ---------- history ----------
-# One file per session: {"cwd", "roadmaps": [{"title", "start", "end", "steps": [{"id", "subject", "status",
-# "created", "started", "ended", "files"}]}]}. Times in seconds. Only step titles, statuses, times and file paths;
-# the title of a roadmap is the first line of the request that started it.
-
-def title_of(prompt):
-    """First line of a request, kept as a roadmap title when it says something (3 words or more, not a command)."""
-    line = next((l.strip() for l in str(prompt).splitlines() if l.strip()), "")
-    return line[:100] if len(line.split()) >= 3 and not line.startswith(("/", "<", "!")) else None  # not a command
+# One file per session: {"cwd", "roadmaps": [{"start", "end", "steps": [{"id", "subject", "status", "created",
+# "started", "ended", "files"}]}]}. Times in seconds. Only step titles, statuses, times and file paths, never the
+# conversation: a roadmap is named after its first step.
 
 
 def record(h, kind, t, **d):
@@ -120,7 +115,7 @@ def record(h, kind, t, **d):
     cur = roadmaps[-1] if roadmaps else None
     if kind == "create":
         if cur is None or all(s["status"] in ("completed", "deleted") for s in cur["steps"]):
-            cur = {"title": d.get("title") or d["subject"], "start": t, "steps": []}  # a new request, a new roadmap
+            cur = {"start": t, "steps": []}  # the previous one is over: a new roadmap
             roadmaps.append(cur)
         cur["steps"].append({"id": str(d["id"]), "subject": str(d["subject"])[:200], "status": "pending", "created": t})
         cur["end"] = t
@@ -235,16 +230,15 @@ def created_id(response, session):
     return str(max(ids)) if ids else None
 
 
-def on_tool_done(evt, session, prompt_f):
+def on_tool_done(evt, session):
     tool, inp = evt.get("tool_name"), evt.get("tool_input") or {}
     h, t = load_history(session), time.time()
     if tool == "TaskCreate":
         tid = created_id(evt.get("tool_response"), session)
         if tid is None:
             return
-        title = prompt_f.read_text(encoding="utf-8") if prompt_f.exists() else None
         count = len(h.get("roadmaps", []))
-        record(h, "create", t, id=tid, subject=inp.get("subject", ""), title=title)
+        record(h, "create", t, id=tid, subject=inp.get("subject", ""))
         if len(h["roadmaps"]) > count and gate_enabled():  # a new plan: the user reviews it before Claude acts
             steer = load_json(STEER / f"{session}.json", {})
             steer["gate"] = "waiting"
@@ -286,9 +280,8 @@ def main():
         return 0
     if evt.get("agent_id"):  # subagents: their tasks and actions are not the session's roadmap
         return 0
-    prompt_f = Path(tempfile.gettempdir()) / "cairn" / f"{session}.prompt"  # title for the next roadmap
     if name == "PostToolUse":
-        on_tool_done(evt, session, prompt_f)
+        on_tool_done(evt, session)
 
     steer_f = STEER / f"{session}.json"
     steer = load_json(steer_f, {})
@@ -359,10 +352,6 @@ def main():
     paused = CLAUDE_DIR / "cairn" / "paused" / session
     if name == "UserPromptSubmit":
         state.unlink(missing_ok=True)
-        title = title_of(prompt)
-        if title:
-            prompt_f.parent.mkdir(parents=True, exist_ok=True)
-            prompt_f.write_text(title, encoding="utf-8")
         if prompt.startswith("/cairn:pause"):
             write(paused, {"t": time.time()})
         elif prompt.startswith(("/cairn:resume", "/cairn:reprise")):

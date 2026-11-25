@@ -103,7 +103,7 @@ assert hook("SessionStart", env=desktop) == (0, "")
 hook("UserPromptSubmit", env=desktop, session_id="s3")
 assert [hook("PreToolUse", env=desktop, session_id="s3", **WRITE)[0] for _ in range(4)] == [0] * 4
 
-# history: a roadmap per request, titled by the request, with step times and files; it outlives the task list
+# history: a roadmap per plan, with step times and files, never the request; it outlives the task list
 hist = tmp / "claude" / "cairn" / "history" / "h1.json"
 done = lambda sid, tool, **kw: hook("PostToolUse", session_id=sid, tool_name=tool, **kw)
 hook("UserPromptSubmit", session_id="h1", prompt="Add a dark mode to the settings screen\nand more details")
@@ -117,17 +117,17 @@ done("h1", "TaskUpdate", tool_input={"taskId": "1", "status": "completed"})
 done("h1", "Write", tool_input={"file_path": "/p/b.ts"}, agent_id="sub")  # subagents do not count
 h = json.loads(hist.read_text())
 r1 = h["roadmaps"][0]
-assert r1["title"] == "Add a dark mode to the settings screen" and len(h["roadmaps"]) == 1
+assert "title" not in r1 and "dark mode" not in hist.read_text() and len(h["roadmaps"]) == 1
 assert [s["status"] for s in r1["steps"]] == ["completed", "pending"] and r1["steps"][0]["files"] == ["/p/a.ts"]
 assert r1["steps"][0]["started"] <= r1["steps"][0]["ended"] and "files" not in r1["steps"][1]
-# all steps done (or dropped), short follow-up prompt: the next TaskCreate starts a new roadmap with the previous title
+# all steps done (or dropped): the next TaskCreate starts a new roadmap
 done("h1", "TaskUpdate", tool_input={"taskId": "2", "status": "deleted"})
 hook("UserPromptSubmit", session_id="h1", prompt="ok go")
 hook("UserPromptSubmit", session_id="h1", prompt="! brew install something")
 hook("UserPromptSubmit", session_id="h1", prompt="/cairn:pause")
 done("h1", "TaskCreate", tool_input={"subject": "Ship it"}, tool_response={"task": {"id": "3"}})
 h = json.loads(hist.read_text())
-assert len(h["roadmaps"]) == 2 and h["roadmaps"][1]["title"] == "Add a dark mode to the settings screen"
+assert len(h["roadmaps"]) == 2
 assert [s["id"] for s in h["roadmaps"][1]["steps"]] == ["3"]
 if os.name != "nt":
     assert oct(hist.stat().st_mode & 0o777) == "0o600"

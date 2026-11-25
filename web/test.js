@@ -19,8 +19,8 @@ for (const [sid, subject] of [['s1', 'Write <the> code'], ['s2', 'Older request'
 const old = new Date(Date.now() - 3 * 86400e3);
 fs.mkdirSync(path.join(claude, 'cairn', 'history'), { recursive: true });
 const t0 = Date.now() / 1000 - 600;
-fs.writeFileSync(path.join(claude, 'cairn', 'history', 'h1.json'), JSON.stringify({ cwd: project, roadmaps: [{ title: 'Kept roadmap',
-  start: t0, end: t0 + 300, steps: [{ id: '1', subject: 'Done step', status: 'completed', created: t0, ended: t0 + 300 }] }] }));
+fs.writeFileSync(path.join(claude, 'cairn', 'history', 'h1.json'), JSON.stringify({ cwd: project, roadmaps: [{
+  start: t0, end: t0 + 300, steps: [{ id: '1', subject: 'Kept roadmap', status: 'completed', created: t0, ended: t0 + 300 }] }] }));
 fs.utimesSync(path.join(claude, 'tasks', 's2', '1.json'), old, old);
 
 const port = 4900 + Math.floor(Math.random() * 500);

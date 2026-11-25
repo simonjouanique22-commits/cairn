@@ -133,8 +133,8 @@ const hdir = path.join(home, 'cairn', 'history');
 fs.mkdirSync(hdir, { recursive: true });
 const s0 = Date.now() / 1000 - 3600;
 fs.writeFileSync(path.join(hdir, 'hh.json'), JSON.stringify({ cwd: '/work/project-a', roadmaps: [
-  { title: 'Add a <dark> mode', start: s0, end: s0 + 600, steps: [
-    { id: '1', subject: 'Read the code', status: 'completed', created: s0, started: s0, ended: s0 + 240 },
+  { title: 'ok go on', start: s0, end: s0 + 600, steps: [
+    { id: '1', subject: 'Read the <dark> code', status: 'completed', created: s0, started: s0, ended: s0 + 240 },
     { id: '2', subject: 'Write the screen', status: 'completed', created: s0, started: s0 + 240, ended: s0 + 600, files: ['/work/project-a/Settings.tsx'] },
     { id: '3', subject: 'Dropped', status: 'deleted', created: s0 }] },
   { title: 'Fix the login loop', start: s0 - 2 * 86400, end: s0 - 2 * 86400 + 300, steps: [
@@ -145,18 +145,19 @@ fs.writeFileSync(path.join(hdir, 'other.json'), JSON.stringify({ cwd: '/work/pro
   { title: 'Elsewhere', start: s0 + 60, end: s0 + 120, steps: [{ id: '1', subject: 'y', status: 'completed', created: s0 + 60, ended: s0 + 120 }] }] }));
 fs.writeFileSync(path.join(hdir, 'broken.json'), '{');
 const hist = loadHistory(['/work/project-a'], home);
-assert.deepStrictEqual(hist.map((e) => [e.title, e.here, e.done, e.total]),
-  [['Add a <dark> mode', true, 2, 2], ['Elsewhere', false, 1, 1], ['Fix the login loop', true, 1, 2]]);
+assert.deepStrictEqual(hist.map((e) => [e.steps[0].subject, e.here, e.done, e.total]),
+  [['Read the <dark> code', true, 2, 2], ['y', false, 1, 1], ['Find the loop', true, 1, 2]]);
 assert.strictEqual(hist[0].steps[1].ended - hist[0].steps[1].started, 360_000);
 const list = renderApp(null, { tab: 'history', history: hist, lang: 'en' });
-assert(list.includes('Add a &lt;dark&gt; mode') && !list.includes('<dark>') && list.includes('data-pick="hh:0"') && list.includes('data-here="0"'));
-assert(list.includes('<h3 data-k="dh">today</h3>') && list.includes('stopped · 1/2') && list.includes('2/2 ✓') && list.includes('data-text="add a &lt;dark&gt; mode read the code write the screen settings.tsx"'));
+// a roadmap is named after its first step, never after the request (old files still hold one); the others under it
+assert(list.includes('<b>Read the &lt;dark&gt; code</b><span class="hsteps">Write the screen</span>') && !list.includes('ok go on') && !list.includes('<dark>') && list.includes('data-pick="hh:0"') && list.includes('data-here="0"'));
+assert(list.includes('<h3 data-k="dh">today</h3>') && list.includes('stopped · 1/2') && list.includes('2/2 ✓') && list.includes('data-text="read the &lt;dark&gt; code write the screen settings.tsx"'));
 const opened = renderApp(null, { tab: 'history', history: hist, pick: 'hh:0', lang: 'en' });
-assert(opened.includes('data-pick=""') && opened.includes('6 min · <button data-open="/work/project-a/Settings.tsx"') && opened.includes('All files · 1') && !opened.includes('Fix the login loop'));
-assert.strictEqual(toMarkdown(hist[0], 'en').split('\n').slice(2).join('\n'), '\n- [x] Read the code — 4 min\n- [x] Write the screen — 6 min · `Settings.tsx`');
-assert(opened.includes(`data-copy="${'### Add a &lt;dark&gt; mode'}`));
+assert(opened.includes('data-pick=""') && opened.includes('6 min · <button data-open="/work/project-a/Settings.tsx"') && opened.includes('All files · 1') && !opened.includes('Find the loop'));
+assert.strictEqual(toMarkdown(hist[0], 'en').split('\n').slice(2).join('\n'), '\n- [x] Read the <dark> code — 4 min\n- [x] Write the screen — 6 min · `Settings.tsx`');
+assert(opened.includes(`data-copy="${'### Read the &lt;dark&gt; code'}`));
 const tab = renderApp(null, { layout: 'tab', history: hist, pick: 'hh:0', lang: 'en' });
-assert(tab.includes('class="wide"') && tab.includes('this week · 3 roadmaps · 4 steps') && tab.includes('Fix the login loop') && tab.includes('class="long"') && tab.includes('data-period="7"'));
+assert(tab.includes('class="wide"') && tab.includes('this week · 3 roadmaps · 4 steps') && tab.includes('Find the loop') && tab.includes('class="long"') && tab.includes('data-period="7"'));
 assert(renderApp(null, { tab: 'history', history: [], lang: 'fr' }).includes('Aucune roadmap gardée'));
 
 // +/− per step, from Claude Code's copies before each step

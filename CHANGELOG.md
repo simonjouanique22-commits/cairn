@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1
+
+- **History reads better**: a roadmap is named after its first step, with the other steps under it. It used to take
+  the last request typed, which was mostly chat ("ok, go on") and repeated itself across roadmaps. The hook no longer
+  keeps requests at all.
+- The history's "This project" filter read "you are here" (the trail's label had the same name).
+
 ## 1.5.0
 
 - **Steer Claude from the roadmap.** Leave a note on a step, remove a step, add one: the hook passes it to Claude as

@@ -213,7 +213,7 @@ function loadHistory(folders = [], claudeDir = CLAUDE_DIR, max = 300) {
           id: String(s.id), subject: String(s.subject || ''), status: s.status, created: ms(s.created),
           started: ms(s.started) || ms(s.created), ended: ms(s.ended), files: (s.files || []).filter((p) => typeof p === 'string'),
         }));
-        return { id: `${sid}:${i}`, sid, cwd, title: String(r.title || steps[0]?.subject || ''), start: ms(r.start), end: ms(r.end) || ms(r.start),
+        return { id: `${sid}:${i}`, sid, cwd, start: ms(r.start), end: ms(r.end) || ms(r.start),
           steps, done: steps.filter((s) => s.status === 'completed').length, total: steps.length };
       }).filter((e) => e.total);
       c = { m, entries };
@@ -343,7 +343,7 @@ const T = {
     histEmpty: 'No roadmap kept yet: they are saved here as Claude works.', kept: 'Kept on this machine only',
     week: (r, s, d) => `this week · ${r} roadmaps · ${s} steps · ${d}`, timePer: 'TIME PER STEP',
     stepOf: (i, n) => `Step ${i} of ${n}`, doneOf: (d, n) => `${d} of ${n} done`, eta: (d) => `~${d} to the summit`,
-    onTrail: (i, n) => `Step ${i} of ${n} on the way to the summit`, atStart: (n) => `${n} steps to the summit`, here: 'you are here',
+    onTrail: (i, n) => `Step ${i} of ${n} on the way to the summit`, atStart: (n) => `${n} steps to the summit`, youAreHere: 'you are here',
     stonesLeft: (n) => (n === 1 ? '→ 1 stone to the summit' : `→ ${n} stones to the summit`), noChange: 'no change',
     planT: (n) => `Claude has a plan · ${n} steps`, planP: 'Read it, change it if you want, leave a note on a step. Claude starts when you say go.',
     go: 'Let Claude go', rethink: 'Ask for another plan', approvedT: 'Approved · Claude has your go',
@@ -369,7 +369,7 @@ const T = {
     openTab: 'Ouvrir en onglet', histEmpty: "Aucune roadmap gardée pour l'instant : elles s'enregistrent ici au fil du travail de Claude.",
     kept: 'Gardé sur ce poste uniquement', week: (r, s, d) => `cette semaine · ${r} roadmaps · ${s} étapes · ${d}`, timePer: 'TEMPS PAR ÉTAPE',
     stepOf: (i, n) => `Étape ${i} sur ${n}`, doneOf: (d, n) => `${d} sur ${n} faites`, eta: (d) => `~${d} avant le sommet`,
-    onTrail: (i, n) => `Étape ${i} sur ${n} sur la route du sommet`, atStart: (n) => `${n} étapes jusqu'au sommet`, here: 'tu es ici',
+    onTrail: (i, n) => `Étape ${i} sur ${n} sur la route du sommet`, atStart: (n) => `${n} étapes jusqu'au sommet`, youAreHere: 'tu es ici',
     stonesLeft: (n) => (n === 1 ? '→ 1 pierre avant le sommet' : `→ ${n} pierres avant le sommet`), noChange: 'aucun changement',
     planT: (n) => `Claude a un plan · ${n} étapes`, planP: 'Lis-le, change-le si tu veux, laisse une note sur une étape. Claude démarre quand tu dis go.',
     go: 'Go, Claude', rethink: 'Demander un autre plan', approvedT: 'Validé · Claude a ton go',
@@ -424,7 +424,7 @@ function trail(tasks, t) {
   const here = cur >= 0 ? (() => {
     const [x] = pts[cur];
     const anchor = x < 40 ? 'start' : x > 230 ? 'end' : 'middle';
-    return `<text class="here" x="${anchor === 'start' ? Math.max(2, x - 8) : x}" y="66" text-anchor="${anchor}">${esc(t.here)}</text>`;
+    return `<text class="here" x="${anchor === 'start' ? Math.max(2, x - 8) : x}" y="66" text-anchor="${anchor}">${esc(t.youAreHere)}</text>`;
   })() : '';
   const label = complete ? t.summit : cur >= 0 ? t.onTrail(cur + 1, n) : t.atStart(n);
   return `<svg xmlns="http://www.w3.org/2000/svg" class="trail-map" viewBox="0 0 286 70" role="img" aria-label="${esc(label)}" data-k="trail">`
@@ -448,7 +448,7 @@ function announcement(r, signal, lang = 'en') {
 function toMarkdown(e, lang = 'en') {
   const t = T[lang] || T.en;
   const { hour, date } = clock(t);
-  const lines = [`### ${e.title}`, `${date(e.start)} · ${hour(e.start)} → ${hour(e.end)} · ${duration(e.end - e.start)} · ${e.done}/${e.total} ${t.steps}`, ''];
+  const lines = [`### ${e.steps[0]?.subject ?? ''}`, `${date(e.start)} · ${hour(e.start)} → ${hour(e.end)} · ${duration(e.end - e.start)} · ${e.done}/${e.total} ${t.steps}`, ''];
   for (const s of e.steps) {
     const files = s.files.map((f) => '`' + path.basename(f) + '`').join(', ');
     lines.push(`- [${s.status === 'completed' ? 'x' : ' '}] ${s.subject}${stepTime(s) ? ` — ${duration(stepTime(s))}` : ''}${files ? ` · ${files}` : ''}`);
@@ -621,7 +621,7 @@ background:transparent;color:var(--muted)}
 display:flex;flex-direction:column;gap:4px;transition:background-color .15s}
 .hcard:hover{background:var(--hover)}.hcard[aria-current=true]{border-color:var(--accent-text);background:var(--hover)}
 .hcard.stop{border-style:dashed}
-.hcard b{font-size:13px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.hcard b{font-size:13px;font-weight:600;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
 .hsteps{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hmeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 .st{padding:0 6px;border:1px solid var(--chip);border-radius:99px;font-weight:600;white-space:nowrap;color:var(--text)}
@@ -693,9 +693,9 @@ function renderHistory(o, t, wide) {
   const groups = [];
   for (const e of entries) {
     const [cls, chip] = state(e);
-    const text = [e.title, ...e.steps.map((s) => s.subject), ...e.steps.flatMap((s) => s.files.map((f) => path.basename(f)))].join(' ').toLowerCase();
+    const text = [...e.steps.map((s) => s.subject), ...e.steps.flatMap((s) => s.files.map((f) => path.basename(f)))].join(' ').toLowerCase();
     const card = `<button class="hcard ${cls}" data-k="h-${esc(e.id)}" data-pick="${esc(e.id)}" data-here="${e.here ? 1 : 0}" data-t="${e.end}" data-text="${esc(text)}"${e === pick ? ' aria-current="true"' : ''}>
-<b>${esc(e.title)}</b><span class="hsteps">${esc(e.steps.map((x) => x.subject).join(' · '))}</span><span class="hmeta"><span class="st ${cls}">${esc(chip)}</span><span>${hour(e.start)} → ${hour(e.end)} · ${duration(e.end - e.start)}</span><span class="pj">· ${esc(path.basename(e.cwd))}</span></span></button>`;
+<b>${esc(e.steps[0].subject)}</b>${e.total > 1 ? `<span class="hsteps">${esc(e.steps.slice(1).map((x) => x.subject).join(' · '))}</span>` : ''}<span class="hmeta"><span class="st ${cls}">${esc(chip)}</span><span>${hour(e.start)} → ${hour(e.end)} · ${duration(e.end - e.start)}</span><span class="pj">· ${esc(path.basename(e.cwd))}</span></span></button>`;
     const day = dayOf(e.end);
     if (groups.at(-1)?.day !== day) groups.push({ day, cards: [] });
     groups.at(-1).cards.push(card);
@@ -720,7 +720,7 @@ ${groups.map((g) => `<div class="day" data-k="d-${esc(g.day)}"><h3 data-k="dh">$
     }).join('');
     const files = [...new Set(pick.steps.flatMap((s) => s.files))];
     detail = `<section class="hdetail" data-k="hd-${esc(pick.id)}"><button class="pill hback" data-k="back" data-pick="">${esc(t.backHist)}</button>
-<h2 data-k="t">${esc(pick.title)}</h2><div class="chips" data-k="chips"><span class="chip st ${cls}">${esc(chip)}</span><span class="chip">${esc(dayOf(pick.end))} · ${hour(pick.start)} → ${hour(pick.end)}</span><span class="chip">${duration(pick.end - pick.start)}</span>${pick.here ? '' : `<span class="chip">${esc(path.basename(pick.cwd))}</span>`}</div>
+<h2 data-k="t">${esc(pick.steps[0].subject)}</h2><div class="chips" data-k="chips"><span class="chip st ${cls}">${esc(chip)}</span><span class="chip">${esc(dayOf(pick.end))} · ${hour(pick.start)} → ${hour(pick.end)}</span><span class="chip">${duration(pick.end - pick.start)}</span>${pick.here ? '' : `<span class="chip">${esc(path.basename(pick.cwd))}</span>`}</div>
 ${timebar}<ol class="trail" data-k="trail">${steps}</ol>
 <div class="hactions" data-k="act"><button class="btn primary" data-copy="${esc(toMarkdown(pick, o.lang))}">${esc(t.copy)}</button>${files.length ? `<details class="allfiles"><summary class="btn">${esc(t.allFiles(files.length))}</summary><div class="files">${files.map(fileButton).join('')}</div></details>` : ''}</div></section>`;
   }

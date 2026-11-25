@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "hooks"))
-from cairn import HISTORY, WRITE_TOOLS, record, save_history, title_of  # noqa: E402
+from cairn import HISTORY, WRITE_TOOLS, record, save_history  # noqa: E402
 CLAUDE_DIR = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
 SETTINGS = CLAUDE_DIR / "settings.json"
 VERSION = json.loads((ROOT / "vscode" / "package.json").read_text(encoding="utf-8"))["version"]
@@ -91,7 +91,7 @@ def import_history(dry=False):
         raw = f.read_bytes()
         if b'"TaskCreate"' not in raw:
             continue
-        h, title, pending, cwd = {"roadmaps": []}, None, {}, None
+        h, pending, cwd = {"roadmaps": []}, {}, None
         for line in raw.decode("utf-8", "replace").splitlines():
             try:
                 m = json.loads(line)
@@ -102,9 +102,6 @@ def import_history(dry=False):
             cwd = cwd or m.get("cwd")
             content = (m.get("message") or {}).get("content")
             blocks = [b for b in content if isinstance(b, dict)] if isinstance(content, list) else []
-            if m.get("type") == "user" and not m.get("isMeta") and not m.get("isCompactSummary") and not any(b.get("type") == "tool_result" for b in blocks):
-                text = content if isinstance(content, str) else next((b.get("text", "") for b in blocks if b.get("type") == "text"), "")
-                title = title_of(text) or title
             t = stamp(m.get("timestamp"))
             if t is None:
                 continue
@@ -123,7 +120,7 @@ def import_history(dry=False):
                     found = re.search(r"#(\d+)", json.dumps(b.get("content")))
                     tid = tid or (found and found.group(1))
                     if tid:
-                        record(h, "create", t, id=tid, subject=inp.get("subject", ""), title=title)
+                        record(h, "create", t, id=tid, subject=inp.get("subject", ""))
         if h["roadmaps"]:
             n += 1
             if not dry:

@@ -127,7 +127,7 @@ Désactiver le plugin : `claude plugin disable cairn@cairn-local`.
 
 - **Rien ne sort du poste.** Aucun appel réseau, aucune dépendance : Python et Node standard. La vue universelle n’écoute que sur `127.0.0.1` et refuse les requêtes adressées à un autre nom.
 - **Le minimum lu.** Les fichiers de tâches de Claude Code ; dans les transcripts, seulement le dossier de lancement, les changements d’étape, les *chemins* des fichiers écrits et les références des copies « avant ». Les copies elles-mêmes ne sont lues que pour la comparaison que tu ouvres, en lecture seule.
-- **Le minimum gardé.** Pour chaque roadmap : la première ligne de la demande qui l’a lancée (son titre), les titres d’étapes, statuts, horaires et chemins de fichiers — jamais le reste de la conversation. Dans `~/.claude/cairn/history/`, lisible par toi seul, effacé au bout de 90 jours ; supprimer le dossier efface tout.
+- **Le minimum gardé.** Pour chaque roadmap : les titres d’étapes, statuts, horaires et chemins de fichiers — jamais la conversation. (Les versions 1.4 à 1.5.0 gardaient aussi la première ligne de ta demande ; elle n’est plus affichée et part avec le nettoyage des 90 jours.) Dans `~/.claude/cairn/history/`, lisible par toi seul, effacé au bout de 90 jours ; supprimer le dossier efface tout.
 - **Le minimum écrit.** Cet historique, un petit fichier d’état par session dans `~/.claude/cairn/` (« attend », « a fini », « en pause »), tes notes et changements pour Claude dans `~/.claude/cairn/steer/` (lisibles par toi seul), et un compteur dans le dossier temporaire.
 - **Le pilotage reste à toi.** Une note arrive à Claude comme contexte, limitée à 500 caractères, nettoyée des caractères de contrôle, et présentée comme venant de toi via Cairn ; les titres d’étapes viennent de la roadmap, jamais de la page. Rien n’est envoyé ailleurs.
 - **Vue verrouillée.** Un seul script, le sien, autorisé par jeton ; aucune ressource externe — les polices de marque sont embarquées ; le texte des tâches est échappé ; seuls les fichiers repérés dans le transcript ou par git peuvent être ouverts d’un clic.
@@ -174,7 +174,7 @@ Publier une version : mettre à jour `CHANGELOG.md` et les numéros de version, 
 - Sur les anciens modèles, où les outils existent sans la variable, le blocage de secours reste inactif.
 - La comparaison « avant l’étape » dépend des copies de Claude Code ; sans copie, c’est la comparaison avec git (depuis le dernier commit).
 - Les polices embarquées couvrent l’alphabet latin (français compris) ; les autres écritures passent par les polices du système.
-- L’historique commence avec la version 1.4 ; `/cairn:setup` récupère ce que les transcripts de Claude Code gardent encore (environ 30 jours). Une roadmap porte le titre de la demande qui l’a lancée : une relance courte (« ok, continue ») garde le titre précédent, et la ligne d’étapes en dessous les distingue.
+- L’historique commence avec la version 1.4 ; `/cairn:setup` récupère ce que les transcripts de Claude Code gardent encore (environ 30 jours). Une roadmap porte le nom de sa première étape.
 - La validation du plan attend ton go au plus `CAIRN_GATE_WAIT` secondes (10 min par défaut) ; <kbd>Échap</kbd> dans Claude Code arrête l’attente. Une note arrive à la prochaine action de Claude : une action déjà en cours n’est pas interrompue. On ne peut pas encore réordonner les étapes.
 
 ## Crédits
