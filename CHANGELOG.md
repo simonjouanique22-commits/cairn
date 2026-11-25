@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.2
+
+- **+/− you can trust.** Counted from Claude's edits themselves, not from Claude Code's backups, which it skips for a
+  file it already copied in the same turn (so long autonomous turns showed the time instead). A step that may have
+  written files through a command (script, redirection, `sed -i`, `mv`…) or a subagent shows its time rather than a
+  partial count, and "no change" only appears when the step neither edited nor ran anything.
+
 ## 1.5.1
 
 - **History reads better**: a roadmap is named after its first step, with the other steps under it. It used to take

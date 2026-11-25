@@ -1,5 +1,5 @@
 {
   "name": "cairn",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Cairn — Claude's plan, stone by stone: Claude splits large requests into a roadmap and keeps it up to date; the editor views (VS Code family, JetBrains, Vim/Neovim, any browser) show it, with the files touched at each step and \"Claude is waiting for you\"."
 }

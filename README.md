@@ -49,7 +49,7 @@
 | **Claude is waiting for you** | Blinking sticker, status bar on alert, notification with "Open terminal". |
 | **Before / after** | Under each step, the files it touched. One click opens the *before the step ↔ now* diff. Files changed by a command (`sed -i`, a script…) show up dashed. |
 | **The trail** | One stone per step on the way to the summit, "you are here" on the current one, and a rough time left learnt from your past roadmaps. Only what changes moves. |
-| **+/− per step** | Each finished step shows the lines it changed; open it for its files, one click for the *before the step ↔ now* diff. |
+| **+/− per step** | Each finished step shows the lines Claude's edits changed (the time instead when a command or a subagent may have written files: those are not counted); open it for its files, one click for the *before the step ↔ now* diff. |
 | **Steer Claude** | Leave a note on a step, remove a step, add one: Claude gets it at its next action, without being stopped. With the **plan gate** on, Claude stops after making its plan; you edit it, press **Let Claude go**, and it picks up at once with your changes. |
 | **Several sessions** | Two Claudes in the same folder? Pills to switch between them. |
 | **History** | Every roadmap is kept on your machine, after Claude Code has cleared its own list: search it, reopen it with the time and files of each step, copy it as Markdown for a pull request. A wide view opens in an editor tab. |
@@ -126,7 +126,7 @@ Turn the plugin off: `claude plugin disable cairn@cairn-local`.
 ## Under the hood
 
 - **Nothing leaves your machine.** No network calls, no dependencies: plain Python and Node. The universal view only listens on `127.0.0.1` and refuses requests addressed to any other name.
-- **Reads the minimum.** Claude Code's task files; in transcripts, only the launch folder, step changes, the *paths* of written files and the references of the "before" backups. The backups themselves are only read for the diff you open, read-only.
+- **Reads the minimum.** Claude Code's task files; in transcripts, only the launch folder, step changes, the *paths* of written files, how many lines each edit added and removed (counted, never kept) and the references of the "before" backups. The backups themselves are only read for the diff you open, read-only.
 - **Keeps the minimum.** For each roadmap: step titles, statuses, times and file paths — never the conversation. (Versions 1.4 to 1.5.0 also kept the first line of your request; it is no longer shown and goes with the 90-day cleanup.) In `~/.claude/cairn/history/`, readable by you only, deleted after 90 days; delete the folder to forget everything.
 - **Writes the minimum.** That history, a small state file per session in `~/.claude/cairn/` ("waiting", "done", "paused"), your notes and edits for Claude in `~/.claude/cairn/steer/` (readable by you only), and a counter in the temp folder.
 - **Steering stays yours.** A note reaches Claude as context, capped at 500 characters, cleaned of control characters, and clearly labelled as coming from you through Cairn; step titles are taken from the roadmap, never from the page. Nothing is sent anywhere else.

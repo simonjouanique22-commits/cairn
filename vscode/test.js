@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, stepStats, lineDiff, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
+const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cairn-'));
 const transcript = (sid) => path.join(home, 'projects', 'p-' + sid, sid + '.jsonl');
@@ -95,12 +95,15 @@ for (const m of renderApp(r, { pills: [r, r] }).matchAll(/<(main|ol|header|nav|l
 const t0 = Date.now() - 600_000;
 const iso = (ms) => new Date(ms).toISOString();
 const line = (ts, name, input) => JSON.stringify({ type: 'assistant', timestamp: iso(ts), message: { content: [{ type: 'tool_use', name, input }] } });
+const result = (ts, toolUseResult) => JSON.stringify({ type: 'user', timestamp: iso(ts), toolUseResult, message: { content: [{ type: 'tool_result', tool_use_id: 'x', content: 'ok' }] } });
 const snapshot = (files) => JSON.stringify({ type: 'file-history-snapshot', snapshot: { trackedFileBackups: files } });
 session('ddd', '/work/project-d', ['completed', 'in_progress'], 0);
 fs.appendFileSync(transcript('ddd'), [
   line(t0, 'TaskUpdate', { taskId: '1', status: 'in_progress' }),
   snapshot({ 'src/a.js': { backupFileName: 'aaaa1111@v1', version: 1, backupTime: iso(t0 + 1000), realParentDir: '/work/project-d/src' } }),
-  line(t0 + 2000, 'Edit', { file_path: '/work/project-d/src/a.js' }),
+  line(t0 + 2000, 'Edit', { file_path: '/work/project-d/src/a.js', new_string: '"file-history-snapshot" "structuredPatch"' }),
+  result(t0 + 2100, { filePath: '/work/project-d/src/a.js', structuredPatch: [{ lines: [' ctx', '-old', '+new', '+more'] }] }),
+  result(t0 + 3000, { type: 'create', filePath: '/work/project-d/src/b.js', content: 'a\nb\n', structuredPatch: [] }),
   line(t0 + 60_000, 'TaskUpdate', { taskId: '1', status: 'completed' }),
   line(t0 + 61_000, 'TaskUpdate', { taskId: '2', status: 'in_progress' }),
   snapshot({ 'src/a.js': { backupFileName: 'bbbb2222@v2', version: 2, backupTime: iso(t0 + 62_000), realParentDir: '/work/project-d/src' },
@@ -160,13 +163,19 @@ const tab = renderApp(null, { layout: 'tab', history: hist, pick: 'hh:0', lang: 
 assert(tab.includes('class="wide"') && tab.includes('this week · 3 roadmaps · 4 steps') && tab.includes('Find the loop') && tab.includes('class="long"') && tab.includes('data-period="7"'));
 assert(renderApp(null, { tab: 'history', history: [], lang: 'fr' }).includes('Aucune roadmap gardée'));
 
-// +/− per step, from Claude Code's copies before each step
-assert.deepStrictEqual(lineDiff('a\nb\nc', 'a\nc\nd\ne'), [2, 1]);
-const fh = path.join(home, 'file-history', 'ddd');
-fs.mkdirSync(fh, { recursive: true });
-fs.writeFileSync(path.join(fh, 'aaaa1111@v1'), 'x\ny\n');
-fs.writeFileSync(path.join(fh, 'bbbb2222@v2'), 'x\ny\nz\nw\n');
-assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }], tr, home), { 1: { add: 2, del: 0 }, 2: { add: 0, del: 0 } });
+// +/− per step, counted from the edits' results (an edit whose text mentions those markers is still an edit)
+assert.deepStrictEqual([...tr.files['1']], ['/work/project-d/src/a.js']);
+assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }, { id: '3' }], tr), { 1: { add: 4, del: 1 }, 2: { add: 0, del: 0 } });
+// step 2 runs tests: no false "no change"; then a script that writes: its numbers would be partial, so none
+fs.appendFileSync(transcript('ddd'), line(t0 + 70_000, 'Bash', { command: 'npm test 2>&1 | tail -3 > /dev/null' }) + '\n');
+fs.appendFileSync(transcript('ddd'), result(t0 + 71_000, { filePath: '/work/project-d/c.js', structuredPatch: [{ lines: ['+x'] }] }) + '\n');
+assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }], traceOf('ddd', home)), { 1: { add: 4, del: 1 }, 2: { add: 1, del: 0 } });
+fs.appendFileSync(transcript('ddd'), line(t0 + 72_000, 'Bash', { command: "python3 - <<'EOF'\nopen('c.js','w')\nEOF" }) + '\n');
+assert.deepStrictEqual(stepStats('ddd', [{ id: '1' }, { id: '2' }], traceOf('ddd', home)), { 1: { add: 4, del: 1 } });
+const writes = ['cat > a.txt', 'echo x >> log', "python3 - <<'EOF'", 'sed -i "" s/a/b/ f', 'mv a b', 'rm -rf build', 'git checkout -- f', 'npm test | tee out'];
+const reads = ['npm test 2>&1 | tail -3', 'grep -n x f > /dev/null', 'sed -n 1,9p f', 'git diff --stat', 'uv run pytest -q', 'ls -la', 'a && b || c'];
+assert(writes.every((c) => WRITES.test(c)) && !reads.some((c) => WRITES.test(c)), [...writes.filter((c) => !WRITES.test(c)), ...reads.filter((c) => WRITES.test(c))].join(' / '));
+assert(!renderApp(r, { stats: { 1: { add: 3, del: 0 } }, cmdFiles: { 1: new Set(['/x']) } }).includes('+3')); // partial: no numbers
 const withStats = renderApp(r, { stats: { 1: { add: 38, del: 4 } } });
 assert(withStats.includes('<span class="add">+38</span> <span class="del">−4</span>'));
 assert(renderApp(r, { stats: { 1: { add: 0, del: 0 } } }).includes('no change'));

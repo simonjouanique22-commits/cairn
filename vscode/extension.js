@@ -91,10 +91,15 @@ const loadRoadmap = (folders, claudeDir = CLAUDE_DIR) => loadSessions(folders, c
 const key = (p) => (process.platform === 'win32' ? path.normalize(p).toLowerCase() : path.normalize(p));
 
 const traces = new Map();
-const emptyTrace = () => ({ offset: 0, cur: null, rest: Buffer.alloc(0), files: {}, start: {}, end: {}, backups: {} });
+// A command that probably writes files: redirection, heredoc script, in-place edit, move, copy, delete, git rewrite.
+// ponytail: a guess from the command line (a script that writes without these signs gets through), per-step snapshots
+// of the working tree if that matters
+const WRITES = /(^|[^0-9&>])>(?![&>]?\s*\/dev\/null)|<<|\bsed\s+-i|\btee\b|\b(mv|cp|rm|touch|mkdir|patch|Set-Content|Out-File|Remove-Item|Move-Item|Copy-Item)\b|\bgit\s+(checkout|restore|apply|reset|stash|merge|rebase|pull|mv|rm)\b/;
+const emptyTrace = () => ({ offset: 0, cur: null, rest: Buffer.alloc(0), files: {}, start: {}, end: {}, backups: {}, delta: {}, ran: {}, wrote: {} });
 // What the transcript says about the steps, read incrementally: start and end of each step (TaskUpdate), paths of the
-// files written while it was in progress (Write/Edit/MultiEdit/NotebookEdit), and the backups Claude Code makes before
-// changing a file (file-history-snapshot). Never the content of messages.
+// files written while it was in progress (Write/Edit/MultiEdit/NotebookEdit), the lines those edits added and removed
+// (counted from their results, nothing kept), and the backups Claude Code makes before changing a file
+// (file-history-snapshot). Never the content of messages.
 function traceOf(sid, claudeDir = CLAUDE_DIR) {
   const f = transcriptOf(sid, claudeDir);
   if (!f) return emptyTrace();
@@ -112,11 +117,10 @@ function traceOf(sid, claudeDir = CLAUDE_DIR) {
     const cut = all.lastIndexOf(10);
     tr.rest = cut < 0 ? all : all.subarray(cut + 1);
     for (const line of cut < 0 ? [] : all.subarray(0, cut).toString('utf8').split('\n')) {
-      const snapshot = line.includes('"file-history-snapshot"');
-      if (!snapshot && !line.includes('"tool_use"')) continue;
+      if (!line.includes('"file-history-snapshot"') && !line.includes('"tool_use"') && !line.includes('"structuredPatch"')) continue;
       let msg;
       try { msg = JSON.parse(line); } catch { continue; }
-      if (snapshot) {
+      if (msg.type === 'file-history-snapshot') {
         for (const [name, b] of Object.entries(msg.snapshot?.trackedFileBackups || {})) {
           const t = Date.parse(b?.backupTime);
           if (!t) continue;
@@ -125,6 +129,12 @@ function traceOf(sid, claudeDir = CLAUDE_DIR) {
           if (!list.some((x) => x.t === t)) list.push({ t, name: b.backupFileName ?? null });
         }
         continue;
+      }
+      const res = msg.toolUseResult;
+      if (tr.cur && Array.isArray(res?.structuredPatch)) { // an edit's result: its +/− goes to the step in progress
+        const d = (tr.delta[tr.cur] ||= { add: 0, del: 0 });
+        if (res.type === 'create' && typeof res.content === 'string') d.add += res.content ? res.content.replace(/\n$/, '').split('\n').length : 0;
+        for (const h of res.structuredPatch) for (const l of h?.lines || []) { if (l[0] === '+') d.add += 1; else if (l[0] === '-') d.del += 1; }
       }
       const when = Date.parse(msg.timestamp) || 0;
       for (const b of msg.message?.content || []) {
@@ -136,6 +146,9 @@ function traceOf(sid, claudeDir = CLAUDE_DIR) {
         } else if (tr.cur && /^(Write|Edit|MultiEdit|NotebookEdit)$/.test(b.name)) {
           const p = b.input?.file_path || b.input?.notebook_path;
           if (typeof p === 'string') (tr.files[tr.cur] ||= new Set()).add(path.normalize(p));
+        } else if (tr.cur && /^(Bash|PowerShell|Agent|Task)$/.test(b.name)) { // files may change without a counted edit
+          tr.ran[tr.cur] = true;
+          if (!/^(Bash|PowerShell)$/.test(b.name) || WRITES.test(String(b.input?.command || ''))) tr.wrote[tr.cur] = true;
         }
       }
     }
@@ -270,55 +283,15 @@ function steer(sid, action, tasks = [], claudeDir = CLAUDE_DIR) {
 
 // ---------- +/− per step ----------
 
-// Lines added and removed between two versions of a text.
-// ponytail: compares the lines as a multiset (a moved line counts for nothing); a real diff if exact numbers matter
-function lineDiff(a, b) {
-  const left = new Map();
-  for (const l of a.split('\n')) left.set(l, (left.get(l) || 0) + 1);
-  let add = 0;
-  for (const l of b.split('\n')) {
-    const n = left.get(l);
-    if (n) left.set(l, n - 1); else add += 1;
-  }
-  let del = 0;
-  for (const n of left.values()) del += n;
-  return [add, del];
-}
-const readText = (f) => { try { return fs.statSync(f).size < 2e6 ? fs.readFileSync(f, 'utf8') : null; } catch { return null; } };
-const diffs = new Map();
-
-// +/− of each step of a roadmap: for each file Claude wrote during the step, from Claude Code's copy taken before the
-// step to its copy taken before the next step (or the file as it is now). A step that wrote nothing: { add: 0, del: 0 }.
-// No entry when Claude Code kept no copy.
-function stepStats(sid, tasks, tr, claudeDir = CLAUDE_DIR) {
+// +/− of each step of a roadmap: the lines Claude's edits added and removed while it was in progress. No entry (the
+// view shows the time) when a command or subagent may have written files too: they are not counted. { add: 0, del: 0 }
+// only when the step neither edited nor ran anything. ponytail: a line edited twice counts twice
+function stepStats(sid, tasks, tr) {
   const out = {};
-  const starts = Object.values(tr.start).sort((a, b) => a - b);
   for (const task of tasks) {
-    const start = tr.start[task.id];
-    if (!start) continue;
-    const files = tr.files[task.id];
-    if (!files?.size) { out[task.id] = { add: 0, del: 0 }; continue; }
-    const next = starts.find((x) => x > start) ?? Infinity;
-    let add = 0, del = 0, known = false;
-    for (const file of files) {
-      const before = backupBefore(tr, file, start);
-      if (!before) continue;
-      const later = (tr.backups[key(file)] || []).filter((x) => x.t >= next - 1000).sort((a, b) => a.t - b.t)[0];
-      const k = `${sid}|${file}|${before.name}|${later ? later.name : mtimeOf(file)}`;
-      let d = diffs.get(k);
-      if (!d) {
-        const copy = (name) => (name ? readText(path.join(claudeDir, 'file-history', sid, name)) : '');
-        const old = copy(before.name);
-        const cur = later ? copy(later.name) : readText(file) ?? '';
-        if (old === null || cur === null) continue;
-        d = lineDiff(old, cur);
-        diffs.set(k, d);
-      }
-      add += d[0];
-      del += d[1];
-      known = true;
-    }
-    if (known) out[task.id] = { add, del };
+    if (!tr.start[task.id] || tr.wrote[task.id]) continue;
+    if (tr.delta[task.id]) out[task.id] = { ...tr.delta[task.id] };
+    else if (!tr.files[task.id]?.size && !tr.ran[task.id]) out[task.id] = { add: 0, del: 0 };
   }
   return out;
 }
@@ -781,8 +754,8 @@ function renderApp(r, o = {}) {
     };
     const delta = (id) => {
       const d = stats[id];
-      if (!d) return '';
-      if (!d.add && !d.del) return cmdFiles[id]?.size ? '' : `<span class="delta" data-k="dl">${esc(t.noChange)}</span>`;
+      if (!d || cmdFiles[id]?.size) return ''; // files changed by commands: not counted, so no numbers
+      if (!d.add && !d.del) return `<span class="delta" data-k="dl">${esc(t.noChange)}</span>`;
       return `<span class="delta" data-k="dl"><span class="add">+${d.add}</span> <span class="del">−${d.del}</span></span>`;
     };
     const note = (i) => `<div class="note${i.sent ? ' sent' : ''}${i.step ? '' : ' plan'}" data-k="n-${esc(i.id)}"><small>${esc(i.step ? t.noteFor : t.planNote)} · ${esc(i.sent ? t.sent : t.queued)}${i.sent ? '' : `<button class="link" data-cancel="${esc(i.id)}">${esc(t.cancel)}</button>`}</small><span>${esc(i.text)}</span></div>`;
@@ -1189,6 +1162,6 @@ function activate(context) {
 
 module.exports = {
   activate, deactivate() {}, loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, emptyTrace, backupBefore, filesByCommand,
-  readSignal, readSteer, steer, stepStats, lineDiff, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell,
+  readSignal, readSteer, steer, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell,
   fontFaces, CLAUDE_DIR,
 };
