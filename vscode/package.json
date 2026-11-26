@@ -2,7 +2,7 @@
   "name": "cairn",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "publisher": "local",
   "icon": "media/icon.png",
   "galleryBanner": {
@@ -217,19 +217,41 @@
             "description": "%config.language%",
             "order": 10
           },
+          "cairn.palette": {
+            "type": "string",
+            "enum": [
+              "cairn",
+              "colorblind",
+              "violet",
+              "emerald",
+              "raspberry",
+              "teal"
+            ],
+            "enumItemLabels": [
+              "%config.palette.cairn%",
+              "%config.palette.colorblind%",
+              "%config.palette.violet%",
+              "%config.palette.emerald%",
+              "%config.palette.raspberry%",
+              "%config.palette.teal%"
+            ],
+            "default": "cairn",
+            "description": "%config.palette%",
+            "order": 11
+          },
           "cairn.accent": {
             "type": "string",
-            "default": "#2B3BFF",
-            "format": "color",
+            "default": "",
             "description": "%config.accent%",
-            "order": 11
+            "order": 12,
+            "pattern": "^(#[0-9a-fA-F]{3,8})?$"
           },
           "cairn.pop": {
             "type": "string",
-            "default": "#FF7AD9",
-            "format": "color",
+            "default": "",
             "description": "%config.pop%",
-            "order": 12
+            "order": 13,
+            "pattern": "^(#[0-9a-fA-F]{3,8})?$"
           }
         },
         "order": 1

@@ -87,7 +87,7 @@ It checks that the task tools are enabled (on recent models, Claude Code only pr
 <details>
 <summary><b>Other editors</b></summary>
 
-- **Universal view** (any editor): `node cairn/web/serve.js <project folder> --open` opens the roadmap on `http://127.0.0.1:4823`. Read-only, reachable from your machine only; clicking a file copies its path. `--lang fr` for French.
+- **Universal view** (any editor): `node cairn/web/serve.js <project folder> --open` opens the roadmap on `http://127.0.0.1:4823`. Read-only, reachable from your machine only; clicking a file copies its path. `--lang fr` for French, `--palette colorblind` for another palette (otherwise the one chosen in VS Code).
 - **JetBrains**: *Settings › Plugins › ⚙ › Install Plugin from Disk…* with the release's `cairn-jetbrains-vX.Y.Z.zip`, then the **Cairn** tool window. Needs Node.js; Cairn is looked up in `~/.claude/plugins/local/cairn` (or `CAIRN_HOME`).
 - **Vim**: `set runtimepath+=~/.claude/plugins/local/cairn/vim` in your `.vimrc`, then `:Cairn`. The panel is in French when `v:lang` is (or with `let g:cairn_lang = 'fr'`).
 - **Neovim**: `vim.opt.runtimepath:append(vim.fn.expand('~/.claude/plugins/local/cairn/vim'))`, then `:Cairn`.
@@ -120,7 +120,8 @@ In VS Code, the ⚙ button of the view (or Settings → Cairn). The **Claude** s
 | `cairn.history` · `CAIRN_HISTORY` | on | Keep past roadmaps (History tab); off, only the current one is kept. |
 | `cairn.historyDays` · `CAIRN_HISTORY_DAYS` | `90` | How long past roadmaps are kept. |
 | `cairn.trail` · `cairn.timeLeft` · `cairn.lines` · `cairn.files` · `cairn.steering` · `cairn.sessions` · `cairn.sticker` · `cairn.statusBar` (VS Code) | on | One checkbox per part of the view: the trail, the time left, the +/−, the files under each step, the note / remove / add buttons, the session pills, the "Claude is waiting" sticker, the status bar item. |
-| `cairn.accent` · `cairn.pop` (VS Code) | blue · pink | Colors of the step in progress and of the stickers. |
+| `cairn.palette` (VS Code) | `cairn` | Colors of the view: Cairn (blue and pink), color-blind friendly (blue and amber), violet and lime, emerald and lemon, raspberry and mint, teal and coral. The universal view and JetBrains follow it. |
+| `cairn.accent` · `cairn.pop` (VS Code) | empty | Your own colors (hex) for the step in progress and the stickers, instead of the palette's. |
 | `cairn.staleHours` (VS Code) | `2` | Past this, a roadmap is greyed out as old. |
 | `cairn.notifications` (VS Code) | on | Notification when Claude is waiting for you. |
 | `cairn.language` (VS Code) | `auto` | English or French, following VS Code. |

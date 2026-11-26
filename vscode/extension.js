@@ -241,9 +241,9 @@ function loadHistory(folders = [], claudeDir = CLAUDE_DIR, max = 300) {
 }
 
 // ---------- settings the hook reads ----------
-// ~/.claude/cairn/config.json holds the extension's Claude settings that differ from their default (a setting put back
+// ~/.claude/cairn/config.json holds the extension's Claude settings, and the palette for the web view, that differ from their default (a setting put back
 // to its default is removed, so the hook's default applies). Claude's environment variables still win over it.
-const HOOK_SETTINGS = ['requireRoadmap', 'threshold', 'planGate', 'gateWait', 'snapshots', 'history', 'historyDays'];
+const HOOK_SETTINGS = ['requireRoadmap', 'threshold', 'planGate', 'gateWait', 'snapshots', 'history', 'historyDays', 'palette'];
 function writeHookConfig(values, claudeDir = CLAUDE_DIR) {
   const f = path.join(claudeDir, 'cairn', 'config.json');
   let cfg = {};
@@ -468,15 +468,15 @@ const X_IC = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-h
 
 const CSS = `
 :root{--paper:#FFFDF8;--outline:#121212;--shadow:#121212;--ink:#121212;--text:#1F1F1F;--muted:#6B675F;--soft:#8A857B;
---hollow:#8A857B;--chip:#C9C4BA;--line:#E7E3DA;--hover:rgba(18,18,18,.05);--accent:#2B3BFF;--accent-text:#2B3BFF;--pop:#FF7AD9;
---card-border:#121212;--card-shadow:#121212;--card-muted:#DADFFF;--box-fg:#FFFDF8;--add:#1A7F37;--del:#CF222E;
+--hollow:#8A857B;--chip:#C9C4BA;--line:#E7E3DA;--hover:rgba(18,18,18,.05);--accent:#2B3BFF;--accent-text:var(--accent);--pop:#FF7AD9;
+--card-border:#121212;--card-shadow:#121212;--card-muted:color-mix(in srgb,var(--accent) 15%,#fff);--box-fg:#FFFDF8;--add:#1A7F37;--del:#CF222E;
 --tab-on:#121212;--tab-on-text:#FFFDF8;--sticker-border:#121212;--note-bg:#FFFFFF;
 --brand:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
 --ui:var(--vscode-font-family,-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif);
 --mono:'JetBrains Mono',var(--vscode-editor-font-family,ui-monospace),Menlo,monospace}
 body.vscode-dark,body.vscode-high-contrast{--paper:#1C1C21;--outline:#2E2E36;--shadow:#000;--ink:#E7E3DB;--text:#E7E3DB;
---muted:#9B968D;--soft:#7E7A72;--hollow:#6E6A63;--chip:#3A3A42;--line:#2A2A31;--hover:rgba(255,255,255,.05);--accent:#3F4CF0;
---accent-text:#9AA4FF;--card-border:var(--accent);--card-shadow:#000;--card-muted:#DCE0FF;--box-fg:#1C1C21;--add:#3FB950;
+--muted:#9B968D;--soft:#7E7A72;--hollow:#6E6A63;--chip:#3A3A42;--line:#2A2A31;--hover:rgba(255,255,255,.05);
+--accent-text:color-mix(in srgb,var(--accent) 45%,#fff);--card-border:var(--accent);--card-shadow:#000;--box-fg:#1C1C21;--add:#3FB950;
 --del:#F85149;--tab-on:#2F2F37;--tab-on-text:#F0ECE4;--sticker-border:var(--pop);--note-bg:#24242B}
 *{box-sizing:border-box}
 body{margin:0;padding:8px 14px 18px 8px;font-family:var(--ui);font-size:13px;color:var(--text)}
@@ -733,6 +733,22 @@ ${timebar}<ol class="trail" data-k="trail">${steps}</ol>
 
 // Parts of the view the settings can turn off (cairn.trail, cairn.timeLeft…); all shown by default.
 const SHOW = { trail: true, timeLeft: true, lines: true, files: true, steering: true, sessions: true, sticker: true, history: true };
+
+// Colour pairs: accent carries white text, pop carries dark text (contrast 4.5:1 or more, light and dark themes).
+const PALETTES = {
+  cairn: { accent: '#2B3BFF', pop: '#FF7AD9' },
+  colorblind: { accent: '#2B3BFF', pop: '#FFB000' }, // blue and amber: apart for the common colour blindnesses
+  violet: { accent: '#6A2BFF', pop: '#C8F03C' },
+  emerald: { accent: '#00704A', pop: '#FFD93D' },
+  raspberry: { accent: '#C2185B', pop: '#8AF0D0' },
+  teal: { accent: '#00716F', pop: '#FF9270' },
+};
+// The page's colours: the palette's, unless the user gave their own (hex).
+function paletteVars(name, accent, pop) {
+  const p = PALETTES[name] || PALETTES.cairn;
+  const hex = (v, d) => (/^#[0-9a-fA-F]{3,8}$/.test(String(v)) ? v : d);
+  return { '--accent': hex(accent, p.accent), '--pop': hex(pop, p.pop) };
+}
 
 // View content (elements tagged data-k: the page only replaces what changed, and animates what arrives; inside an
 // element, either every child has a key or none does).
@@ -996,10 +1012,9 @@ function activate(context) {
 
   const settings = () => {
     const c = vscode.workspace.getConfiguration('cairn');
-    const hex = (v, d) => (/^#[0-9a-fA-F]{3,8}$/.test(String(v)) ? v : d);
     const language = c.get('language', 'auto');
     return {
-      accent: hex(c.get('accent'), '#2B3BFF'), pop: hex(c.get('pop'), '#FF7AD9'),
+      vars: paletteVars(c.get('palette'), c.get('accent'), c.get('pop')),
       staleHours: Math.max(0.1, Number(c.get('staleHours', 2)) || 2), notifications: c.get('notifications', true) !== false,
       statusBar: c.get('statusBar', true) !== false,
       show: Object.fromEntries(Object.keys(SHOW).map((k) => [k, c.get(k, true) !== false])),
@@ -1007,7 +1022,7 @@ function activate(context) {
     };
   };
 
-  // The settings the hook reads go to ~/.claude/cairn/config.json.
+  // The settings the hook reads, and the palette for the web view, go to ~/.claude/cairn/config.json.
   const syncConfig = () => {
     const c = vscode.workspace.getConfiguration('cairn');
     writeHookConfig(Object.fromEntries(HOOK_SETTINGS.map((k) => [k, c.get(k) === c.inspect(k)?.defaultValue ? undefined : c.get(k)])));
@@ -1055,7 +1070,7 @@ function activate(context) {
       const pick = s.pick || (s.layout === 'tab' ? (history.find((e) => e.here) || history[0])?.id : null);
       history.find((e) => e.id === pick)?.steps.forEach((st) => st.files.forEach((f) => known.add(f)));
       post(s, { type: 'state', html: renderApp(r, { ...shared, tab: s.tab, pick, layout: s.layout, canTab: s.layout === 'panel', composing: s.composing }),
-        vars: { '--accent': c.accent, '--pop': c.pop }, announcement: s.layout === 'panel' ? announcement(r, signal, c.lang) : '' });
+        vars: c.vars, announcement: s.layout === 'panel' ? announcement(r, signal, c.lang) : '' });
     }
     if (view) {
       const left = r ? r.total - r.done : 0;
@@ -1188,6 +1203,6 @@ function activate(context) {
 
 module.exports = {
   activate, deactivate() {}, loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, emptyTrace, backupBefore, filesByCommand,
-  readSignal, readSteer, steer, writeHookConfig, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell,
+  readSignal, readSteer, steer, writeHookConfig, paletteVars, PALETTES, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell,
   fontFaces, CLAUDE_DIR,
 };

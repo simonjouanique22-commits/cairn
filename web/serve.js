@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Cairn's universal view: the same roadmap as in VS Code, served on http://127.0.0.1:4823 to open next to any editor
 // (JetBrains, Zed, Neovim, Sublime Text…). Read-only, reachable from this machine only.
-//   node web/serve.js [project folder] [--port 4823] [--lang en|fr] [--open]
+//   node web/serve.js [project folder] [--port 4823] [--lang en|fr] [--palette cairn|colorblind|violet|emerald|raspberry|teal] [--open]
 const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
@@ -13,8 +13,12 @@ const args = process.argv.slice(2);
 const option = (name, fallback) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : fallback; };
 const PORT = Number(option('--port', 4823));
 const LANG = option('--lang', (process.env.LANG || '').toLowerCase().startsWith('fr') ? 'fr' : 'en');
-const raw = args.find((a, i) => !a.startsWith('--') && !['--port', '--lang'].includes(args[i - 1])) || process.cwd();
+const raw = args.find((a, i) => !a.startsWith('--') && !['--port', '--lang', '--palette'].includes(args[i - 1])) || process.cwd();
 const FOLDER = (() => { try { return fs.realpathSync.native(path.resolve(raw)); } catch { return path.resolve(raw); } })();
+// The palette: --palette, else the one chosen in VS Code (~/.claude/cairn/config.json), else Cairn's.
+const palette = () => {
+  try { return option('--palette') || JSON.parse(fs.readFileSync(path.join(cairn.CLAUDE_DIR, 'cairn', 'config.json'), 'utf8')).palette; } catch { return undefined; }
+};
 const FONTS = path.join(__dirname, '..', 'vscode', 'media', 'fonts');
 const HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 
@@ -46,7 +50,7 @@ function state() {
   if (!history.some((e) => e.id === pick)) pick = null;
   const steering = { stats: r ? cairn.stepStats(r.sid, r.tasks, tr) : {}, eta: cairn.timeLeft(r, history), steer: r ? cairn.readSteer(r.sid) : { items: [] }, composing };
   return JSON.stringify({ type: 'state', html: cairn.renderApp(r, { files: tr.files, cmdFiles, signal, pills, now, lang: LANG, tab, pick, history, project: FOLDER, ...steering }),
-    announcement: cairn.announcement(r, signal, LANG) });
+    vars: cairn.paletteVars(palette()), announcement: cairn.announcement(r, signal, LANG) });
 }
 
 function broadcast(force) {

@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, writeHookConfig, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
+const { loadRoadmap, loadSessions, loadHistory, filesByStep, traceOf, backupBefore, filesByCommand, readSignal, readSteer, steer, writeHookConfig, paletteVars, PALETTES, stepStats, WRITES, timeLeft, trail, announcement, toMarkdown, bar, render, renderApp, shell, fontFaces } = require('./extension.js');
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cairn-'));
 const transcript = (sid) => path.join(home, 'projects', 'p-' + sid, sid + '.jsonl');
@@ -197,6 +197,13 @@ assert.deepStrictEqual(JSON.parse(fs.readFileSync(cfgFile, 'utf8')), { other: 'k
 assert.strictEqual(writeHookConfig({ threshold: 5 }, home), false); // unchanged: not rewritten
 if (process.platform !== 'win32') assert.strictEqual(fs.statSync(cfgFile).mode & 0o777, 0o600);
 fs.unlinkSync(cfgFile);
+// palettes: the chosen one, the user's own hex over it, Cairn's when unknown
+assert.deepStrictEqual(paletteVars('colorblind'), { '--accent': '#2B3BFF', '--pop': '#FFB000' });
+assert.deepStrictEqual(paletteVars('violet', '#123456', 'pink'), { '--accent': '#123456', '--pop': PALETTES.violet.pop });
+assert.deepStrictEqual(paletteVars('nope', ''), { '--accent': '#2B3BFF', '--pop': '#FF7AD9' });
+const ids = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).contributes.configuration
+  .flatMap((g) => Object.entries(g.properties)).find(([k]) => k === 'cairn.palette')[1].enum;
+assert.deepStrictEqual(ids, Object.keys(PALETTES)); // the setting offers every palette, and only those
 // exact numbers from the hook's snapshots win, whatever wrote the files
 fs.mkdirSync(path.join(home, 'cairn', 'snaps'), { recursive: true });
 fs.writeFileSync(path.join(home, 'cairn', 'snaps', 'ddd.json'), JSON.stringify({ cur: '2', steps: { 2: { start: 'a', end: 'b', add: 12, del: 3 } } }));
@@ -250,9 +257,16 @@ const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - 
 for (const [text, bg, min, what] of [
   ['#121212', '#FFFDF8', 4.5, 'light text'], ['#5E5A52', '#FFFDF8', 4.5, 'light muted text'], ['#8A857B', '#FFFDF8', 3, 'light big number'],
   ['#F4F0E8', '#222226', 4.5, 'dark text'], ['#C9C4BA', '#222226', 4.5, 'dark muted text'], ['#85807A', '#222226', 3, 'dark big number'],
-  ['#FFFFFF', '#2B3BFF', 4.5, 'card in progress'], ['#121212', '#FF7AD9', 4.5, 'stickers'],
   ['#121212', '#F3F3F3', 4.5, 'pills on light background'], ['#F4F0E8', '#181818', 4.5, 'pills on dark background'],
 ]) assert(contrast(text, bg) >= min, `${what}: ${contrast(text, bg).toFixed(2)} < ${min}`);
+// every palette, as the CSS mixes it: color-mix(in srgb, accent N%, #fff)
+const mix = (hex, n) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * n + 255 * (1 - n)).toString(16).padStart(2, '0')).join('');
+for (const [name, { accent, pop }] of Object.entries(PALETTES)) {
+  for (const [text, bg, what] of [
+    ['#FFFFFF', accent, 'card in progress'], [mix(accent, 0.15), accent, 'card muted text'], ['#121212', pop, 'stickers'],
+    [accent, '#FFFDF8', 'light accent text'], [mix(accent, 0.45), '#1C1C21', 'dark accent text'],
+  ]) assert(contrast(text, bg) >= 4.5, `${name} ${what}: ${contrast(text, bg).toFixed(2)} < 4.5`);
+}
 
 // the view only allows its own script and the extension's fonts, which do exist
 const page = shell('N0NCE', 'https://ext.vscode-resource', fontFaces((f) => `https://ext.vscode-resource/fonts/${f}`));

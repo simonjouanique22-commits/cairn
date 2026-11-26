@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0
+
+- **Palettes.** `cairn.palette` picks the colors of the view among six: Cairn (blue and pink), color-blind friendly
+  (blue and amber), violet and lime, emerald and lemon, raspberry and mint, teal and coral. Every pair keeps white text on the step in
+  progress and dark text on the stickers readable (4.5:1 or more). The universal view and JetBrains follow the
+  palette chosen in VS Code, or `--palette`.
+- `cairn.accent` and `cairn.pop` are now empty by default and, when filled, override the palette.
+- The dark theme now uses the chosen colors too: the custom accent used to be ignored there.
+
 ## 1.8.0
 
 - **A checkbox for everything.** Each part of the view can be turned off in VS Code's settings: the trail, the time
